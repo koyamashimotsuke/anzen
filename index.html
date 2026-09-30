@@ -1,0 +1,1648 @@
+<!DOCTYPE html>
+<html lang="ja">
+<meta charset="utf-8">
+<title>校内安全点検表</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap">
+<style>
+:root{
+  --bg:#F2F4F7; --surface:#FFFFFF; --surface-2:#F7F8FB; --ink:#18202E; --muted:#566074; --faint:#8790A2;
+  --line:#DCE0E8; --line-strong:#C3CAD6;
+  --accent:#27468F; --accent-ink:#FFFFFF; --accent-soft:#E5EBF7;
+  --ok:#1D7443; --ok-soft:#E1F1E7; --minor:#945E00; --minor-soft:#FAEFD8; --major:#BA3324; --major-soft:#F9E3DF;
+  --on-sem:#FFFFFF;
+  --shadow:0 1px 2px rgba(18,28,56,.06),0 3px 10px rgba(18,28,56,.05);
+  --font:"BIZ UDPGothic","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#10131A; --surface:#191E27; --surface-2:#1F2530; --ink:#E6E9F0; --muted:#A0A8B8; --faint:#7A8396;
+    --line:#2B3240; --line-strong:#3B4456;
+    --accent:#93ACF2; --accent-ink:#0F1730; --accent-soft:#222C47;
+    --ok:#5BC98A; --ok-soft:#16321F; --minor:#EDB54E; --minor-soft:#372B12; --major:#FF7F6E; --major-soft:#3D1D18;
+    --on-sem:#10131A;
+    --shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#10131A; --surface:#191E27; --surface-2:#1F2530; --ink:#E6E9F0; --muted:#A0A8B8; --faint:#7A8396;
+  --line:#2B3240; --line-strong:#3B4456;
+  --accent:#93ACF2; --accent-ink:#0F1730; --accent-soft:#222C47;
+  --ok:#5BC98A; --ok-soft:#16321F; --minor:#EDB54E; --minor-soft:#372B12; --major:#FF7F6E; --major-soft:#3D1D18;
+  --on-sem:#10131A;
+  --shadow:0 1px 2px rgba(0,0,0,.4);
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.6;-webkit-tap-highlight-color:transparent}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1000px;margin:0 auto;padding-inline:16px}
+.num{font-variant-numeric:tabular-nums}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.top-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:10px 6px}
+.brand{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;min-width:0}
+.brand h1{margin:0;font-size:19px;font-weight:700;letter-spacing:.04em;white-space:nowrap}
+.brand .yr{font-size:13px;color:var(--muted)}
+.sync{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.sync i{width:9px;height:9px;border-radius:50%;background:var(--faint);display:inline-block}
+.sync.saved i{background:var(--ok)} .sync.saving i{background:var(--minor)} .sync.error i{background:var(--major)}
+.tabs{display:flex;gap:4px;padding-block:4px 0;overflow-x:auto;scrollbar-width:none}
+.tab{border:0;background:none;padding:10px 14px 11px;font-size:15px;font-weight:700;color:var(--muted);border-bottom:3px solid transparent;border-radius:0;white-space:nowrap;flex:0 0 auto}
+.tab[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* 月の選択：点検途中の月は黄色で目立たせる */
+.periods{display:flex;gap:6px;overflow-x:auto;padding-block:8px 10px;scrollbar-width:thin}
+.pchip{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:60px;padding:6px 8px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);font-size:14px;font-weight:700;color:var(--ink)}
+.pchip small{display:block;font-size:11px;line-height:1.35;min-height:1.35em;padding:0 6px;border-radius:999px;font-weight:700;color:var(--faint)}
+.pchip.st-part{background:var(--minor-soft);border-color:var(--minor);border-width:2px}
+.pchip.st-part small{background:var(--minor);color:var(--on-sem)}
+.pchip.st-done small{color:var(--ok)}
+.pchip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+.pchip[aria-pressed="true"].st-done small,.pchip[aria-pressed="true"]:not(.st-part) small{color:var(--accent-ink)}
+.pchip.now:not([aria-pressed="true"]):not(.st-part){border-color:var(--accent)}
+
+main{padding-block:18px 60px}
+.banner{margin-bottom:14px;padding:10px 14px;border-radius:10px;background:var(--accent-soft);color:var(--ink);font-size:14px}
+.banner.warn{background:var(--minor-soft)}
+.banner.part{background:var(--minor-soft);border:2px solid var(--minor);font-weight:700}
+.muted{color:var(--muted)}
+.sec-h{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 12px}
+.sec-h h2{margin:0;font-size:20px;text-wrap:balance}
+h3.sub{margin:28px 0 10px;font-size:16px;display:flex;align-items:center;gap:8px}
+.progress{height:8px;border-radius:5px;background:var(--line);overflow:hidden}
+.progress i{display:block;height:100%;background:var(--ok);border-radius:5px}
+
+.seg{display:inline-flex;border:1.5px solid var(--line-strong);border-radius:10px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:none;padding:7px 14px;font-size:14px;color:var(--muted)}
+.seg button+button{border-left:1.5px solid var(--line-strong)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:700}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1.5px solid var(--line-strong);background:var(--surface);border-radius:10px;padding:9px 16px;font-size:15px;font-weight:700;color:var(--ink);text-align:left}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{border-color:transparent;background:none;color:var(--accent);padding-inline:6px}
+.btn.danger{color:var(--major)}
+.btn.small{padding:5px 10px;font-size:13.5px;min-width:38px}
+.btn:disabled{opacity:.45;cursor:default}
+
+/* team picker */
+.teampick{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.tchip{border:1.5px solid var(--line-strong);background:var(--surface);border-radius:12px;padding:9px 16px;font-size:16px;font-weight:700;min-height:46px}
+.tchip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.teamhead{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:14px;display:grid;grid-template-columns:1fr auto;gap:10px 16px;align-items:center}
+.teamhead h2{margin:0;font-size:21px}
+.teamhead .mem{font-size:14px;color:var(--muted)}
+.teamhead .progress{grid-column:1/-1}
+.teamhead .go{min-height:52px;font-size:16px}
+
+/* place list */
+.summary-line{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+.summary-line .progress{flex:1 1 180px}
+.plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.pcard{display:grid;grid-template-columns:auto 1fr auto;grid-template-rows:auto auto auto;gap:2px 12px;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px 10px;box-shadow:var(--shadow);width:100%}
+.pcard.st-partial{border:2px solid var(--minor)}
+.pnum{grid-row:1/3;align-self:center;min-width:2.3em;height:2.3em;border-radius:8px;background:var(--surface-2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:var(--muted)}
+.pnum.step{background:var(--accent-soft);border-color:transparent;color:var(--accent);border-radius:50%}
+.pname{font-weight:700;font-size:16px;line-height:1.35;align-self:end}
+.pmeta{grid-column:2;font-size:13px;color:var(--muted);min-height:1.3em}
+.pstat{grid-column:3;grid-row:1/3;align-self:center}
+.pbar{grid-column:1/-1;margin-top:8px;height:4px;border-radius:3px;background:var(--line);overflow:hidden}
+.pbar i{display:block;height:100%;background:var(--minor)}
+.pcard.st-done .pbar i{background:var(--ok)}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:13px;font-weight:700;white-space:nowrap;background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+.pill.ok{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.pill.minor{background:var(--minor-soft);color:var(--minor);border-color:transparent}
+.pill.major{background:var(--major-soft);color:var(--major);border-color:transparent}
+.pill.prog{background:var(--minor);color:var(--on-sem);border-color:transparent}
+.pill-set{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+
+/* place detail */
+.stepper{display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin}
+.step{flex:0 0 auto;display:flex;align-items:center;gap:7px;border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px 6px 6px;font-size:14px;font-weight:700;color:var(--ink);max-width:260px}
+.step b{width:24px;height:24px;flex:0 0 24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12.5px;background:var(--surface-2);color:var(--muted)}
+.step span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.step.st-done b{background:var(--ok);color:var(--on-sem)}
+.step.st-partial b{background:var(--minor);color:var(--on-sem)}
+.step.has-bad b{background:var(--major);color:var(--on-sem)}
+.step.on{border-color:var(--accent);background:var(--accent-soft)}
+.phead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.phead h2{margin:0;font-size:22px;line-height:1.35;text-wrap:balance}
+.phead .when{font-size:14px;color:var(--muted)}
+.meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 16px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label,.lbl{font-size:12.5px;color:var(--muted);letter-spacing:.05em}
+.input{width:100%;border:1.5px solid var(--line-strong);border-radius:9px;background:var(--surface);padding:9px 11px;font-size:16px;min-height:44px}
+.input.sm{min-height:38px;padding:6px 9px;font-size:15px}
+textarea.input{min-height:84px;resize:vertical;line-height:1.55}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted);margin:10px 2px 12px}
+.legend b{font-weight:700}
+.legend .s-ok{color:var(--ok)} .legend .s-minor{color:var(--minor)} .legend .s-major{color:var(--major)}
+.allok{width:100%;min-height:56px;font-size:17px;border:2px solid var(--ok);color:var(--ok);background:var(--ok-soft);border-radius:12px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px}
+.allok:disabled{border-color:var(--line);color:var(--muted);background:var(--surface-2)}
+.allok .sym{font-size:22px}
+.gjump{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0 0}
+
+.items{margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.grp{padding:8px 14px;background:var(--surface-2);border-top:1px solid var(--line);font-size:13.5px;font-weight:700;color:var(--muted);letter-spacing:.06em}
+.items>.grp:first-child{border-top:0}
+.item{display:grid;grid-template-columns:2.1em 1fr auto;gap:8px 12px;padding:12px 14px;border-top:1px solid var(--line);align-items:center}
+.items>.item:first-child{border-top:0}
+.item.s-minor{background:var(--minor-soft)}
+.item.s-major{background:var(--major-soft)}
+.item.na .itxt{color:var(--faint)}
+.ino{font-weight:700;color:var(--muted);text-align:right;font-size:15px;align-self:start;padding-top:1px}
+.itxt{white-space:pre-line;line-height:1.5}
+.meth{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px}
+.meth span{font-size:11.5px;border:1px solid var(--line-strong);color:var(--muted);border-radius:5px;padding:0 6px;line-height:1.6;background:var(--surface)}
+.prev{margin-top:5px;font-size:13px;color:var(--muted)}
+.prev b.minor{color:var(--minor)} .prev b.major{color:var(--major)}
+.marks{display:flex;gap:6px}
+.mk{width:56px;height:48px;border-radius:10px;border:1.5px solid var(--line-strong);background:var(--surface);font-size:23px;font-weight:700;line-height:1;color:var(--faint);display:flex;align-items:center;justify-content:center}
+.mk.ok.on{background:var(--ok);border-color:var(--ok);color:var(--on-sem)}
+.mk.minor.on{background:var(--minor);border-color:var(--minor);color:var(--on-sem)}
+.mk.major.on{background:var(--major);border-color:var(--major);color:var(--on-sem)}
+.mk:disabled{cursor:default;opacity:.6}
+.na-tag{font-size:13px;font-weight:700;color:var(--muted);border:1.5px dashed var(--line-strong);border-radius:10px;padding:10px 12px;white-space:nowrap;text-align:center}
+.detail{grid-column:2/-1;display:flex;flex-direction:column;gap:8px;padding-top:2px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chips .lbl{margin-right:2px}
+.chip{border:1px solid var(--line-strong);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:14px;line-height:1.3;color:var(--ink)}
+.chip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip.prevc{border-style:dashed}
+.drow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.drow .input{flex:1 1 220px}
+
+.memo{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.memo h3{margin:0 0 4px;font-size:15px}
+.foot-nav{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:18px}
+.foot-nav .btn{min-height:52px}
+
+/* tables */
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+table.grid{border-collapse:collapse;width:100%;font-size:13.5px}
+table.grid th,table.grid td{border-bottom:1px solid var(--line);padding:6px 6px;text-align:center;white-space:nowrap}
+table.grid thead th{background:var(--surface-2);font-weight:700;color:var(--muted);font-size:12.5px}
+table.grid .lft{text-align:left;position:sticky;left:0;background:var(--surface);z-index:1}
+table.grid thead .lft{background:var(--surface-2);z-index:2}
+table.grid td.txt{white-space:normal;min-width:15em;text-align:left;line-height:1.45}
+table.grid tbody tr:last-child td{border-bottom:0}
+.cell{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:28px;border-radius:7px;font-weight:700;border:0;background:none;padding:0 4px;font-size:14px}
+.cell.ok{color:var(--ok)} .cell.minor{background:var(--minor-soft);color:var(--minor)} .cell.major{background:var(--major-soft);color:var(--major)}
+.cell.partial{background:var(--minor);color:var(--on-sem);font-size:12px} .cell.none,.cell.na{color:var(--line-strong)}
+.cell.cur{outline:2px solid var(--accent);outline-offset:-2px}
+button.cell:hover{background:var(--accent-soft)}
+
+/* report */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.stat .k{font-size:12.5px;color:var(--muted);letter-spacing:.05em}
+.stat .v{font-size:26px;font-weight:700;line-height:1.2;margin-top:4px}
+.stat .v small{font-size:14px;color:var(--muted);font-weight:400;margin-left:2px}
+.stat.major .v{color:var(--major)} .stat.minor .v{color:var(--minor)} .stat.ok .v{color:var(--ok)}
+.teamrows{display:flex;flex-direction:column;gap:8px}
+.teamrow{display:grid;grid-template-columns:minmax(7em,auto) 1fr auto;gap:6px 14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.teamrow.part{border:2px solid var(--minor)}
+.teamrow .tn{font-weight:700}
+.teamrow .tn small{display:block;font-weight:400;font-size:12.5px;color:var(--muted)}
+.teamrow .left{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px}
+.issues{display:flex;flex-direction:column;gap:8px}
+.issue{display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.sev{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700;color:var(--on-sem)}
+.sev.minor{background:var(--minor)} .sev.major{background:var(--major)}
+.issue .where{font-weight:700}
+.issue .where button{border:0;background:none;padding:0;color:var(--accent);font-weight:700;text-align:left}
+.issue .what{font-size:14px;color:var(--muted);margin-top:2px}
+.issue .note{margin-top:4px}
+.issue .who{font-size:12.5px;color:var(--muted);margin-top:4px}
+.issue .seg button{padding:6px 10px;font-size:13px}
+.empty{padding:16px;border:1px dashed var(--line-strong);border-radius:12px;color:var(--muted);text-align:center;background:var(--surface)}
+
+/* A4 報告書（紙の見た目で固定） */
+.a4wrap{overflow-x:auto;padding-bottom:8px}
+.a4{background:#fff;color:#111;width:210mm;min-height:297mm;margin:0 auto;padding:13mm 12mm;box-shadow:0 2px 14px rgba(0,0,0,.18);font-family:var(--font);font-size:9.3pt;line-height:1.45}
+.a4-head{display:flex;justify-content:space-between;align-items:flex-start;gap:6mm;margin-bottom:4mm}
+.a4-title{font-size:15pt;font-weight:700;letter-spacing:.06em}
+.a4-sub{font-size:9.5pt;margin-top:1.5mm}
+.a4 .stamp{border-collapse:collapse;flex:0 0 auto}
+.a4 .stamp th,.a4 .stamp td{border:0.6pt solid #333;width:16mm;text-align:center;font-size:7.8pt;line-height:1.2;font-weight:400;padding:0.8mm;vertical-align:middle}
+.a4 .stamp th{height:8mm}
+.a4 .stamp td{height:15mm}
+.a4 h4{font-size:10.5pt;margin:5mm 0 1.8mm;padding-bottom:0.8mm;border-bottom:1pt solid #333;break-after:avoid}
+.a4 .kpi{display:flex;gap:5mm;flex-wrap:wrap;font-size:10pt;margin-bottom:2mm}
+.a4 .kpi b{font-size:12pt}
+.a4t{width:100%;border-collapse:collapse;font-size:8.8pt}
+.a4t th,.a4t td{border:0.5pt solid #555;padding:1.1mm 1.5mm;vertical-align:top;text-align:left}
+.a4t th{background:#EDEDED;font-weight:700;white-space:nowrap}
+.a4t thead{display:table-header-group}
+.a4t tr{break-inside:avoid}
+.a4t .c{text-align:center;white-space:nowrap}
+.a4t .sym{font-weight:700;font-size:10pt}
+.a4 .none{color:#555;font-size:9pt;margin:0}
+.a4 .memo-box{border:0.6pt solid #333;height:26mm;margin-top:1mm}
+
+/* 使い方 */
+.help{max-width:760px}
+.help section{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:12px}
+.help h3{margin:0 0 8px;font-size:17px}
+.help ol,.help ul{margin:0;padding-left:1.4em;display:flex;flex-direction:column;gap:6px}
+.help p{margin:0 0 8px}
+.help .k{display:inline-block;border:1.5px solid var(--line-strong);border-radius:7px;padding:0 7px;font-weight:700;font-size:14px;background:var(--surface-2)}
+.help .k.ok{color:var(--ok)} .help .k.minor{color:var(--minor)} .help .k.major{color:var(--major)}
+.help .toc{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.help section{scroll-margin-top:130px}/* 場所・設定・使い方のボタン列は、スクロールしても見出しの下に留める */
+.stepper,.subnav,.help .toc{position:sticky;top:calc(var(--top-h,120px) + env(safe-area-inset-top,0px));z-index:15;background:var(--bg);padding-block:8px;margin-inline:-4px;padding-inline:4px;box-shadow:0 6px 8px -8px rgba(0,0,0,.25)}
+.stepper{margin-bottom:10px}
+.grp,.help section,.item{scroll-margin-top:calc(var(--top-h,120px) + 70px)}/* settings */
+.subnav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.subnav button{border:1.5px solid var(--line-strong);background:var(--surface);border-radius:999px;padding:7px 14px;font-size:14.5px;font-weight:700;color:var(--muted)}
+.subnav button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+.card h3{margin:0 0 4px;font-size:16px}
+.card p{margin:0 0 10px;font-size:14px;color:var(--muted)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tm{border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:var(--surface)}
+.tm-h{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:12px 14px;text-align:left;font-weight:700;font-size:16px}
+.tm-h .cnt{font-weight:400;font-size:13.5px;color:var(--muted);margin-left:auto}
+.tm-h .chev{color:var(--muted)}
+.tm-b{padding:0 14px 14px;border-top:1px solid var(--line)}
+.route{list-style:none;margin:10px 0 8px;padding:0;display:flex;flex-direction:column;gap:5px}
+.route li{display:flex;align-items:center;gap:8px;padding:5px 6px 5px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2)}
+.route li b{min-width:1.6em;color:var(--accent)}
+.route li span{flex:1}
+.route li .btn{border-width:1px}
+.team-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.team-tools select{max-width:100%;flex:1 1 260px}
+.warnlist{font-size:14px;margin-top:10px;padding:10px 12px;border-radius:9px;background:var(--minor-soft)}
+.plrow{display:grid;grid-template-columns:3em 1fr minmax(9em,14em) auto;gap:6px;align-items:start;padding:6px 0;border-top:1px solid var(--line)}
+.plrow:first-child{border-top:0}
+.plrow .pn{font-weight:700;color:var(--muted);padding-top:9px;text-align:right}
+.acts{display:flex;gap:4px}
+.addrow{display:grid;grid-template-columns:minmax(9em,16em) 1fr auto;gap:6px;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line-strong)}
+.ied{display:grid;grid-template-columns:2.2em 1fr auto;gap:6px 10px;padding:10px 0;border-top:1px solid var(--line)}
+.ied .ino{padding-top:9px}
+.ied textarea.input{min-height:48px}
+.ied-opts{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}
+.ied-opts .input.sm{width:auto;flex:1 1 150px}
+.mt{border:1.5px solid var(--line-strong);background:var(--surface);border-radius:7px;padding:4px 8px;font-size:13px;color:var(--muted)}
+.mt[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+.ied-act{display:flex;flex-direction:column;gap:4px}
+.input.dup{border-color:var(--major);background:var(--major-soft)}
+.dupnote{display:block;font-size:13px;font-weight:700;color:var(--major);margin-top:3px}
+.savebar{position:sticky;bottom:0;z-index:5;display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:12px 14px calc(12px + env(safe-area-inset-bottom,0px));margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 -2px 10px rgba(0,0,0,.06)}
+.savebar.dirty{border:2px solid var(--minor);background:var(--minor-soft)}
+.savebar .msg{font-size:13.5px;font-weight:700;flex-basis:100%;order:-2}
+.savebar .btn{flex:0 0 auto;padding-block:7px}
+.savebar .err{font-size:13.5px;font-weight:700;color:var(--major);flex-basis:100%;order:-1}
+.savebar .err:empty{display:none}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:50;background:var(--ink);color:var(--bg);border-radius:12px;padding:10px 14px 10px 18px;display:flex;align-items:center;gap:14px;box-shadow:0 6px 24px rgba(0,0,0,.25);font-size:15px;max-width:calc(100% - 32px)}
+.toast button{border:0;background:none;color:var(--bg);font-weight:700;text-decoration:underline;padding:6px}
+
+@media (max-width:640px){
+  .item{grid-template-columns:1.8em 1fr}
+  .marks,.na-tag{grid-column:1/-1}
+  .mk{flex:1;height:50px}
+  .detail{grid-column:1/-1}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .row2{grid-template-columns:1fr}
+  .brand h1{font-size:17px}
+  .sync{font-size:11.5px;white-space:normal;text-align:right}
+  .savebar{padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));gap:6px}
+  .tab{padding-inline:8px;font-size:14.5px}
+  .teamhead{grid-template-columns:1fr}
+  .teamrow{grid-template-columns:1fr auto}
+  .teamrow .prog{grid-column:1/-1;order:3}
+  .plrow{grid-template-columns:2.2em 1fr}
+  .plrow select,.plrow .acts{grid-column:2}
+  .addrow{grid-template-columns:1fr}
+  .ied{grid-template-columns:1.8em 1fr}
+  .ied-act{grid-column:2;flex-direction:row}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media print{
+  @page{size:A4 portrait;margin:10mm}
+  .top,.noprint,.toast{display:none!important}
+  body{background:#fff;color:#000;font-size:10.5pt}
+  main{padding:0!important}
+  .wrap{max-width:none;padding:0}
+  .a4wrap{overflow:visible;padding:0}
+  .a4{width:auto;min-height:0;padding:0;box-shadow:none;margin:0}
+  .tablewrap,.items,.issue,.stat,.memo,.teamrow{border-color:#999;box-shadow:none}
+}
+</style>
+
+<div id="app">
+  <header class="top">
+    <div class="wrap">
+      <div class="top-row">
+        <div class="brand"><h1>校内安全点検表</h1><span class="yr" id="yr"></span></div>
+        <div class="sync" id="sync" role="status" aria-live="polite"><i></i><span>読み込み中…</span></div>
+      </div>
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" data-act="tab" data-tab="check" id="tab-check">点検する</button>
+        <button class="tab" role="tab" data-act="tab" data-tab="report" id="tab-report">報告・確認</button>
+        <button class="tab" role="tab" data-act="tab" data-tab="settings" id="tab-settings">設定</button>
+        <button class="tab" role="tab" data-act="tab" data-tab="help" id="tab-help">使い方</button>
+      </div>
+      <div class="periods" id="periods" aria-label="点検の時期"></div>
+    </div>
+  </header>
+  <main class="wrap" id="view"></main>
+</div>
+<div class="toast" id="toast" hidden><span id="toast-msg"></span><button id="toast-btn" hidden></button></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---- 点検表データ（令和８年度 点検表.xlsx から抽出。文言は原本のまま） ---- */
+const SHEETS = [{"sheet":"1 教室","title":"１．（　　　　　）教室","inspector":null,"items":[{"no":"1","text":"窓・窓ガラス・出入り口の扉は外れやすくないか。","methods":["目視","作動"],"group":""},{"no":"2","text":"窓・窓ガラス等に損傷はないか。鍵じまりはできるか。","methods":["目視","作動"],"group":""},{"no":"3","text":"カーテン（暗幕・レール等）に損傷はないか。","methods":["目視","作動"],"group":""},{"no":"4","text":"べランダ・バルコニーに破損、損傷はないか。","methods":["目視","打音","振動","負荷"],"group":""},{"no":"5","text":"ＰＣ・ＴＶ等電気製品の故障、プラグやコードの損傷はないか。","methods":["目視","作動"],"group":""},{"no":"6","text":"照明器具の不具合やスイッチ、コンセント、コードに不良箇所はないか。","methods":["目視","作動"],"group":""},{"no":"7","text":"コンセントの差し込み・接続部分に接触不良や損傷はないか。","methods":["目視","作動"],"group":""},{"no":"8","text":"室内の明るさは適切か。電灯は切れていないか。","methods":["目視"],"group":""},{"no":"9","text":"黒板やチョーク入れ等に破損や故障はないか。","methods":["目視","作動"],"group":""},{"no":"10","text":"床面に浮き、摩耗、破損、ゆがみはないか。滑りやすくないか。","methods":["目視","負荷","作動"],"group":""},{"no":"11","text":"壁に破損はないか。落下しそうなものはないか。","methods":["目視"],"group":""},{"no":"12","text":"掲示の画鋲等はしっかりととめられているか。","methods":["目視"],"group":""},{"no":"13","text":"机・椅子にささくれがあったり、ネジの緩みや釘などが出ていないか。","methods":["目視","振動"],"group":""},{"no":"14","text":"教卓は破損していないか。","methods":["目視"],"group":""},{"no":"15","text":"冷・暖房器具の破損や不具合はないか。","methods":["目視","作動"],"group":""},{"no":"16","text":"火元責任者は明確に表示されているか。","methods":["目視"],"group":""},{"no":"17","text":"天井に破損やシミ、雨漏りはないか。","methods":["目視"],"group":""},{"no":"18","text":"内線電話は正常に作動するか。","methods":["作動"],"group":""},{"no":"19","text":"（冬季）加湿器は正常に作動するか。","methods":["作動"],"group":""},{"no":"20","text":"防犯用具は取り出しやすい箇所にあるか。","methods":["目視"],"group":""}]},{"sheet":"2 廊下","title":"２．（　　）階（　　　）廊下","inspector":null,"items":[{"no":"1","text":"床面に浮き、摩耗、破損、ゆがみはないか。","methods":["目視","負荷"],"group":"廊下"},{"no":"2","text":"壁面の釘などの出っ張り等危険はないか。","methods":["目視"],"group":"廊下"},{"no":"3","text":"壁面掲示物・額等はしっかり固定されているか。","methods":["目視","振動","負荷","作動"],"group":"廊下"},{"no":"4","text":"床が滑りやすく転ぶおそれはないか。","methods":["目視"],"group":"廊下"},{"no":"5","text":"フック等が歩行を妨げるおそれはないか。","methods":["目視"],"group":"廊下"},{"no":"6","text":"歩行（通行）の妨げになる物が置かれていないか。","methods":["目視"],"group":"廊下"},{"no":"7","text":"清掃用具入れの破損はないか。","methods":["目視","振動"],"group":"廊下"},{"no":"8","text":"窓・窓ガラス・出入り口の戸は外れやすくなっていないか。","methods":["目視","振動","作動"],"group":"廊下"},{"no":"9","text":"照明器具に損傷・落下のおそれはないか。","methods":["目視","振動","負荷"],"group":"廊下"},{"no":"10","text":"蛍光灯、照明等はすべて点灯するか。","methods":["目視","作動"],"group":"廊下"},{"no":"11","text":"非常口は確保されているか。","methods":["目視","作動"],"group":"廊下"},{"no":"12","text":"防火シャッター・防火扉は正常に作動するか。","methods":["目視","作動"],"group":"廊下"},{"no":"13","text":"火災報知器・消火器・消火栓に損傷や破損はないか。","methods":["目視"],"group":"廊下"},{"no":"14","text":"消化器プレートは表示されているか。","methods":["目視"],"group":"廊下"}]},{"sheet":"2.5 階段 ","title":"２.５　（　　）階段","inspector":null,"items":[{"no":"1","text":"滑り止めが摩耗、損傷してないか。","methods":["目視"],"group":"階段"},{"no":"2","text":"手すりにぐらつきや損傷はないか。","methods":["目視","振動","負荷"],"group":"階段"},{"no":"3","text":"床面に損傷、浮きはないか。","methods":["目視"],"group":"階段"},{"no":"4","text":"照明器具に損傷・落下のおそれはないか。","methods":["目視","振動","負荷"],"group":"階段"},{"no":"5","text":"蛍光灯、照明等はすべて点灯するか。","methods":["目視","作動"],"group":"階段"},{"no":"6","text":"歩行（昇降）の妨げになる物が置かれていないか。","methods":["目視"],"group":"階段"},{"no":"7","text":"非常口・防火扉はすぐ開閉できるか。","methods":["目視","作動"],"group":"階段"}]},{"sheet":"３昇降口","title":"３．（　　）昇降口","inspector":null,"items":[{"no":"1","text":"泥・砂落としに損傷はないか。","methods":["目視"],"group":""},{"no":"2","text":"窓・出入り口扉の損傷や開閉に異状はないか。","methods":["目視","作動"],"group":""},{"no":"3","text":"傘立てに損傷はないか。","methods":["目視","振動"],"group":""},{"no":"4","text":"下足箱に破損はないか。","methods":["目視"],"group":""},{"no":"5","text":"すのこに凸凹や損傷はないか。","methods":["目視","作動"],"group":""},{"no":"6","text":"床に釘や、ささくれが出ていないか。","methods":["目視"],"group":""},{"no":"7","text":"床が滑りやすく、転倒のおそれがないか。","methods":["目視","負荷","作動"],"group":""},{"no":"8","text":"内壁に剥離や亀裂はないか。","methods":["目視"],"group":""},{"no":"9","text":"壁面の掲示板等はしっかり固定されているか。","methods":["目視","振動"],"group":""},{"no":"10","text":"照明器具の不具合やスイッチ、コンセントなどに不良箇所はないか。","methods":["目視","振動","作動"],"group":""},{"no":"11","text":"天井の破損やシミ、雨漏りはないか。","methods":["目視"],"group":""},{"no":"12","text":"防犯ブザーは取り出しやすい箇所にあるか。","methods":["目視"],"group":""}]},{"sheet":"３玄関","title":"３．　正面玄関","inspector":null,"items":[{"no":"1","text":"泥・砂落としに損傷はないか。","methods":["目視"],"group":""},{"no":"2","text":"窓・出入り口扉の損傷や開閉に異状はないか。","methods":["目視","作動"],"group":""},{"no":"3","text":"傘立てに損傷はないか。","methods":["目視","振動"],"group":""},{"no":"4","text":"下足箱に破損はないか。","methods":["目視"],"group":""},{"no":"5","text":"すのこに凸凹や損傷はないか。","methods":["目視","作動"],"group":""},{"no":"6","text":"床に釘や、ささくれが出ていないか。","methods":["目視"],"group":""},{"no":"7","text":"床が滑りやすく、転倒のおそれがないか。","methods":["目視","負荷","作動"],"group":""},{"no":"8","text":"内壁に剥離や亀裂はないか。","methods":["目視"],"group":""},{"no":"9","text":"壁面の掲示板等はしっかり固定されているか。","methods":["目視","振動"],"group":""},{"no":"10","text":"照明器具の不具合やスイッチ、コンセントなどに不良箇所はないか。","methods":["目視","振動","作動"],"group":""},{"no":"11","text":"天井の破損やシミ、雨漏りはないか。","methods":["目視"],"group":""},{"no":"12","text":"防犯ブザーは取り出しやすい箇所にあるか。","methods":["目視"],"group":""}]},{"sheet":"４トイレ・水道場","title":"４．（　　）階（　　　）トイレ・水道場","inspector":null,"items":[{"no":"1","text":"窓・窓ガラス・出入り口の戸は破損していないか。","methods":["目視","振動","作動"],"group":""},{"no":"2","text":"窓・窓ガラス・出入り口の戸は外れやすくなっていないか。","methods":["目視","振動","作動"],"group":""},{"no":"3","text":"足場は滑りやすぐなっていないか。","methods":["目視"],"group":""},{"no":"4","text":"換気扇は正常に作動し、損傷していないか。","methods":["目視","作動"],"group":""},{"no":"5","text":"個室のドアの損傷はないか。","methods":["目視","作動"],"group":""},{"no":"6","text":"便器等の破損、つまり、汚れはないか。","methods":["目視"],"group":""},{"no":"7","text":"便器および仕切板にぐらつきや破損はないか。","methods":["目視","振動","作動"],"group":""},{"no":"8","text":"異臭はなく、清潔に保たれているか。","methods":["目視"],"group":""},{"no":"9","text":"清掃用具庫および用具は破損等無く適切に管理されているか。","methods":["目視","作動"],"group":""},{"no":"10","text":"汚物入れ（女子トイレ）は設置してあるか。","methods":["目視"],"group":""},{"no":"11","text":"鏡等は固定され、破損等はないか","methods":["目視"],"group":""},{"no":"12","text":"水道場はきちんと整頓されているか。","methods":["目視"],"group":""},{"no":"13","text":"スリッパは破損していないか。","methods":["目視"],"group":""}]},{"sheet":"５ 理科室・準備室","title":"５．理科室 準備室","inspector":null,"items":[{"no":"1","text":"窓・窓ガラス・出入り口の扉は外れやすくないか。","methods":["目視","作動"],"group":"理科室"},{"no":"2","text":"窓・窓ガラス等に損傷はないか。","methods":["目視"],"group":"理科室"},{"no":"3","text":"窓や出入り口の鍵じまりはできるか。","methods":["目視","作動"],"group":"理科室"},{"no":"4","text":"カーテン（暗幕・レール等）に損傷はないか。","methods":["目視","作動"],"group":"理科室"},{"no":"5","text":"照明器具の不具合やスイッチ、コンセントなどに不良箇所はないか。","methods":["目視","作動"],"group":"理科室"},{"no":"6","text":"破損した実験器具は適切に処理されているか。","methods":["目視"],"group":"理科室"},{"no":"7","text":"戸棚等の配置・管理・整頓の状態はよいか。","methods":["目視"],"group":"理科室"},{"no":"8","text":"消火器、防火砂は常備されているか。","methods":["目視"],"group":"理科室"},{"no":"9","text":"水道管、配水管に破損はないか。","methods":["目視"],"group":"理科室"},{"no":"10","text":"実験器具に故障や破損はないか。","methods":["目視"],"group":"理科室"},{"no":"11","text":"防犯用具は取り出しやすい箇所にあるか。","methods":["目視"],"group":"理科室"},{"no":"12","text":"薬品は薬品戸棚に保管されているか。","methods":["目視"],"group":"準備室"},{"no":"13","text":"地震等による薬品類の転倒防止がなされているか。","methods":["目視","負荷"],"group":"準備室"},{"no":"14","text":"燃料は所定の場所に保管されているか。","methods":["目視"],"group":"準備室"},{"no":"15","text":"地震等によって棚などが転倒、落下しないようになっているか。","methods":["目視","負荷"],"group":"準備室"}]},{"sheet":"６ 音楽室・準備室","title":"６．音楽室・準備室","inspector":null,"items":[{"no":"1","text":"窓・窓ガラス・出入り口の扉は外れやすくないか。","methods":["目視","作動"],"group":""},{"no":"2","text":"窓・窓ガラス等に損傷はないか。","methods":["目視"],"group":""},{"no":"3","text":"カーテン（暗幕・レール等）に損傷はないか。","methods":["目視","作動"],"group":""},{"no":"4","text":"照明器具の不具合やスイッチ、コンセントなどに不良箇所はないか。","methods":["目視","作動"],"group":""},{"no":"5","text":"楽器類等備品が定位置に保管されているか。","methods":["目視"],"group":""},{"no":"6","text":"楽器類等に損傷はないか。","methods":["目視"],"group":""},{"no":"7","text":"防犯用具は取り出しやすい箇所にあるか。","methods":["目視"],"group":""}]},{"sheet":"７ 放送室","title":"７．放送室","inspector":null,"items":[{"no":"1","text":"出入り口の扉は外れやすくないか。","methods":["目視"],"group":""},{"no":"2","text":"出入り口の鍵じまりはできるか。","methods":["目視"],"group":""},{"no":"3","text":"放送室の中は整頓されているか。","methods":["目視"],"group":""},{"no":"4","text":"その他の異常はないか。","methods":["目視"],"group":""},{"no":"5","text":"放送機器は整頓され、正常に作動するか。","methods":["目視","作動"],"group":""},{"no":"6","text":"机（テーブル）や椅子に、破損や損傷はないか。","methods":["目視","作動"],"group":""}]},{"sheet":"８ 図工室・学習室","title":"８．図工室・学習室","inspector":null,"items":[{"no":"1","text":"窓・窓ガラス・出入り口の扉は外れやすくないか。","methods":["目視","作動"],"group":""},{"no":"2","text":"窓・窓ガラス等に損傷はないか。","methods":["目視"],"group":""},{"no":"3","text":"窓や出入り口の鍵じまりはできるか。","methods":["目視","作動"],"group":""},{"no":"4","text":"カーテン（暗幕・レール等）に損傷はないか。","methods":["目視","作動"],"group":""},{"no":"5","text":"照明器具の不具合やスイッチ、コンセントなどに不良箇所はないか。","methods":["目視","作動"],"group":""},{"no":"6","text":"工作台は安定し、いつも整備されているか。","methods":["目視","振動","負荷"],"group":""},{"no":"7","text":"材料、作品、配剤（不燃物、ビニール等）の保管、処理は適切か。","methods":["目視"],"group":""},{"no":"8","text":"消火器、防火砂等は常備されているか。","methods":["目視"],"group":""},{"no":"9","text":"用具は種別に定位置に保管されているか。","methods":["目視"],"group":""},{"no":"10","text":"用具はいつも安全に使えるように整備されているか。","methods":["目視","作動"],"group":""},{"no":"11","text":"廃材等の処理は適切に行われているか。","methods":["目視"],"group":""},{"no":"12","text":"刃物、きり等は、所定の場所に格納され保管されているか。","methods":["目視"],"group":""},{"no":"13","text":"機械等は、安定した台の上にしっかり固定されているか。","methods":["目視","振動","負荷"],"group":""},{"no":"14","text":"ヒューズ、コード、コンセント等は規定の物が使用されているか。","methods":["目視"],"group":""},{"no":"15","text":"防犯用具は取り出しやすい箇所にあるか。","methods":["目視"],"group":""}]},{"sheet":"９家庭科室","title":"９．家庭科室","inspector":null,"items":[{"no":"1","text":"窓・窓ガラス・出入り口の扉は外れやすくないか。","methods":["目視","作動"],"group":""},{"no":"2","text":"窓・窓ガラス等に損傷はないか。","methods":["目視"],"group":""},{"no":"3","text":"窓や出入り口の鍵じまりはできるか。","methods":["目視","作動"],"group":""},{"no":"4","text":"カーテン（暗幕・レール等）に損傷はないか。","methods":["目視","作動"],"group":""},{"no":"5","text":"照明器具の不具合やスイッチ、コンセントなどに不良箇所はないか。","methods":["目視","作動"],"group":""},{"no":"6","text":"収納棚は、破損していないか。","methods":["目視","作動"],"group":""},{"no":"7","text":"用具は、種類別に定位畳に保管されているか。","methods":["目視"],"group":""},{"no":"8","text":"消火器は常備されているか。","methods":["目視"],"group":""},{"no":"9","text":"ミシンは整備され、安全に使えるようになっているか。","methods":["目視","作動"],"group":""},{"no":"10","text":"コード、コンセントは破損はないか。","methods":["目視"],"group":""},{"no":"11","text":"水まわりは滑りやすく転倒のおそれはないか。","methods":["目視","負荷"],"group":""},{"no":"12","text":"ガス管の破損、とめねじのゆるみなどによるガス漏れはないか。","methods":["目視"],"group":""},{"no":"13","text":"冷蔵庫・電子レンジ等適正に管理され清潔であるか。","methods":["目視","作動"],"group":""},{"no":"14","text":"換気扇は正常に作動するか。","methods":["目視","作動"],"group":""},{"no":"15","text":"水道管・配水管に破損はないか。","methods":["目視","作動"],"group":""},{"no":"16","text":"消火器は常備されているか。","methods":["目視"],"group":""},{"no":"17","text":"食器、機械類は種別に整理され、転倒・落下の危険はないか。","methods":["目視"],"group":""},{"no":"18","text":"刃物など危険を伴う器具類は施錠し、適切に保管されているか。","methods":["目視"],"group":""},{"no":"19","text":"コード、コンセントに破損はないか。","methods":["目視"],"group":""},{"no":"20","text":"防犯用具は取り出しやすい箇所にあるか。","methods":["目視"],"group":""}]},{"sheet":"１０パソコン室","title":"１０．パソコン室","inspector":null,"items":[{"no":"1","text":"窓・窓ガラス・出入り口の扉は外れやすくないか。","methods":["目視","作動"],"group":""},{"no":"2","text":"窓・窓ガラス等に損傷はないか。","methods":["目視"],"group":""},{"no":"3","text":"窓や出入り口の鍵じまりはできるか。","methods":["目視","作動"],"group":""},{"no":"4","text":"カーテン（暗幕・レール等）に損傷はないか。","methods":["目視","作動"],"group":""},{"no":"5","text":"照明器具の不具合やスイッチ、コンセントなどに不良箇所はないか。","methods":["目視","作動"],"group":""},{"no":"6","text":"施錠はきちんとできるか。","methods":["目視","作動"],"group":""},{"no":"7","text":"分電盤に異常はないか。","methods":["目視"],"group":""},{"no":"8","text":"カーテン（暗幕・レール等）の破損はないか。","methods":["目視","作動"],"group":""},{"no":"9","text":"床面に浮き、摩耗、破損はないか。","methods":["目視","負荷"],"group":""},{"no":"10","text":"ホワイトボード等に損傷はないか。","methods":["目視"],"group":""},{"no":"11","text":"エアコンは、正常に作動するか。","methods":["目視","作動"],"group":""},{"no":"12","text":"コンピュータ用机に損傷はないか。","methods":["目視","打音","振動","負荷"],"group":""},{"no":"13","text":"ディスプレー、プリンタはきちんとおかれているか。","methods":["目視"],"group":""},{"no":"14","text":"備品は整頓され、歩行の妨げになるものはないか。","methods":["目視"],"group":""},{"no":"15","text":"防犯用具は取り出しやすい箇所にあるか。","methods":["目視"],"group":""}]},{"sheet":"１１ 保健室","title":"１１．保健室","inspector":null,"items":[{"no":"1","text":"窓・窓ガラス・出入り口の扉は外れやすくないか。","methods":["目視","作動"],"group":""},{"no":"2","text":"窓・窓ガラス等に損傷はないか。","methods":["目視"],"group":""},{"no":"3","text":"窓や出入り口の鍵じまりはできるか。","methods":["目視","作動"],"group":""},{"no":"4","text":"カーテン（暗幕・レール等）に損傷はないか。","methods":["目視","作動"],"group":""},{"no":"5","text":"照明器具の不具合やスイッチ、コンセントなどに不良箇所はないか。","methods":["目視","作動"],"group":""},{"no":"6","text":"医薬品戸棚は使用時以外施錠されているか。","methods":["目視","作動"],"group":""},{"no":"7","text":"医薬品類の名称が表示されているか。","methods":["目視"],"group":""},{"no":"8","text":"医薬品類使用についての指示が明示されているか。","methods":["目視"],"group":""},{"no":"9","text":"医薬品等の点検を定期的に行い、常備されているか。","methods":["目視"],"group":""},{"no":"10","text":"器具戸棚は使用時以外施錠されているか。","methods":["目視","作動"],"group":""},{"no":"11","text":"測定器具等はいつも使用できるよう整備されているか。","methods":["目視"],"group":""},{"no":"12","text":"保健室使用上の注意が示されているか。","methods":["目視"],"group":""},{"no":"13","text":"べット・救護台等に破損はないか。","methods":["目視","負荷"],"group":""},{"no":"14","text":"エアコンのフィルターにつまりが無く、正常に作動するか。","methods":["目視","作動"],"group":""},{"no":"15","text":"不要薬品・空き缶・空き瓶・汚物等は適切に処理されているか．","methods":["目視"],"group":""},{"no":"16","text":"担架は、いつでも使用できる状態で保管されているか。","methods":["目視"],"group":""}]},{"sheet":"１２図書室","title":"１２．図書室","inspector":null,"items":[{"no":"1","text":"窓・窓ガラス・出入り口の戸は外れやすくなっていないか。","methods":["目視","打音","作動"],"group":""},{"no":"2","text":"窓・窓ガラス等に損傷はないか。","methods":["目視"],"group":""},{"no":"3","text":"扉や窓の鍵じまりはきちんとできるか。","methods":["目視","作動"],"group":""},{"no":"4","text":"カーテン（暗幕・レール等）やブラインドに損傷はないか。","methods":["目視","作動"],"group":""},{"no":"5","text":"本棚に損傷はないか。","methods":["目視","作動"],"group":""},{"no":"6","text":"照明器具の不具合やスイッチ、コンセント、コードに不良箇所はないか。","methods":["目視","作動"],"group":""},{"no":"7","text":"床面に浮き、摩耗、破損、ゆがみはないか。","methods":["目視","負荷"],"group":""},{"no":"8","text":"床に、釘やささくれが出ていないか。滑りやすく転倒のおそれはないか。","methods":["目視","負荷","作動"],"group":""},{"no":"9","text":"内壁に剥離や亀裂はないか。","methods":["目視"],"group":""},{"no":"10","text":"書籍の整理整頓はされているか。","methods":["目視"],"group":""},{"no":"11","text":"掲示物の画鋲はしっかりととめられているか。","methods":["目視"],"group":""},{"no":"12","text":"テーブルにささくれがあったり、釘が飛び出していないか。","methods":["目視"],"group":""},{"no":"13","text":"椅子は破損していないか。","methods":["目視","負荷"],"group":""},{"no":"14","text":"冷・暖房器具の破損や不具合はないか。","methods":["目視","作動"],"group":""},{"no":"15","text":"図書室用ＰＣの故障、プラグやコードの損傷はないか。","methods":["目視","作動"],"group":""},{"no":"16","text":"防犯用具は取り出しやすい箇所にあるか。","methods":["目視"],"group":""}]},{"sheet":"１３ 職員室・印刷室","title":"１３．職員室・印刷室（１）","inspector":null,"items":[{"no":"1","text":"窓・窓ガラス・出入り口の戸は外れやすくなっていないか。","methods":["目視","打音","作動"],"group":""},{"no":"2","text":"窓・窓ガラス等に損傷はないか。","methods":["目視"],"group":""},{"no":"3","text":"窓や出入り口の鍵じまりはきちんとできるか。","methods":["目視","作動"],"group":""},{"no":"4","text":"カーテン（暗幕・レール等）に損傷はないか。","methods":["目視","作動"],"group":""},{"no":"5","text":"戸棚・ロッカー・清掃用具入れに損傷はないか。","methods":["目視","作動"],"group":""},{"no":"6","text":"テレビ等電気製品のプラグやコードに損傷はないか。","methods":["目視","振動","作動"],"group":""},{"no":"7","text":"スイッチ、コンセント、コードに不良箇所はないか。","methods":["目視","作動"],"group":""},{"no":"8","text":"コンセントの差し込み・接続部分に損傷はないか。","methods":["目視"],"group":""},{"no":"9","text":"コンセントのほこりやさび等による接触不良はないか","methods":["目視","作動"],"group":""},{"no":"10","text":"１つのコンセントから配線をしすぎていないか。","methods":["目視"],"group":""},{"no":"11","text":"照明器具に損傷・落下のおそれはないか。","methods":["目視","作動"],"group":""},{"no":"12","text":"黒板クリーナー等に破損や故障はないか。","methods":["目視","作動"],"group":""},{"no":"13","text":"床面に浮き、摩耗、破損、ゆがみはないか。","methods":["目視","負荷"],"group":""},{"no":"14","text":"床に釘や、ささくれが出ていないか。","methods":["目視"],"group":""},{"no":"15","text":"床が滑りやすく、転倒のおそれがないか。","methods":["目視","負荷","作動"],"group":""},{"no":"16","text":"内壁に剥離や亀裂はないか。","methods":["目視"],"group":""},{"no":"17","text":"掲示物の画鋲はしっかりととめられているか。","methods":["目視"],"group":""},{"no":"18","text":"机・椅子が故障や破損していないか。","methods":["目視"],"group":""},{"no":"19","text":"冷・暖房器具の破損や不具合はないか。","methods":["目視","作動"],"group":""},{"no":"20","text":"防犯用具は取り出しやすい箇所にあるか。","methods":["目視"],"group":""},{"no":"21","text":"換気扇は正常に作動し、室内の換気は適切に行われるか。","methods":["目視","作動"],"group":""},{"no":"22","text":"個人ロッカーは適切に使用されているか。（破損・中の点検）","methods":["目視","作動"],"group":""},{"no":"23","text":"ゴミ箱等が破損したり、悪臭を発生したりしていないか。","methods":["目視"],"group":""},{"no":"24","text":"鏡はしっかり固定され、亀裂・破損はないか。","methods":["目視","振動","作動"],"group":""},{"no":"25","text":"管理責任者は明確か。","methods":["目視"],"group":""},{"no":"26","text":"天井にシミや雨漏りはないか。","methods":["目視"],"group":""},{"no":"27","text":"天井の破損はないか。","methods":["目視"],"group":""},{"no":"28","text":"印刷室はきれいに清掃・整頓してあるか。","methods":["目視"],"group":""},{"no":"29","text":"不要な印刷物や印刷原稿等が置き忘れていないか。","methods":["目視"],"group":""},{"no":"30","text":"印刷機器・シュレッダー・コピー機等の印刷関係機器は正常に作動するか。","methods":["目視","作動"],"group":""},{"no":"31","text":"裁断機は未使用時に安全な状態になっているか。","methods":["目視"],"group":""},{"no":"32","text":"印刷用紙・インク等の管理は適切か。","methods":["目視"],"group":""}]},{"sheet":"１４体育館","title":"１４．体育館（１）","inspector":null,"items":[{"no":"1","text":"出入り口の扉に損傷はないか。鍵じまりはできるか。","methods":["目視","作動"],"group":""},{"no":"2","text":"床面に損傷、浮きはないか。","methods":["目視"],"group":""},{"no":"3","text":"階段の滑り止めは摩耗、損傷してないか。","methods":["目視"],"group":""},{"no":"4","text":"階段の手すりにぐらつきや損傷はないか。","methods":["目視","振動","負荷"],"group":""},{"no":"5","text":"照明器具に損傷・落下のおそれはないか。","methods":["目視"],"group":""},{"no":"6","text":"蛍光灯、照明等はすべて点灯するか。","methods":["目視","作動"],"group":""},{"no":"7","text":"歩行（昇降）の妨げになる物が置かれていないか。","methods":["目視"],"group":""},{"no":"8","text":"（２階）更衣室などの扉に損傷はないか。鍵じまりはできるか。","methods":["目視","作動"],"group":""},{"no":"9","text":"（冬季）暖房器具は適切に設置、管理されているか。","methods":["目視"],"group":""},{"no":"10","text":"窓・窓ガラス・出入り口の扉は外れやすくないか。","methods":["目視","打音","作動"],"group":"ミーティングルーム"},{"no":"11","text":"窓・窓ガラス等に損傷はないか。","methods":["目視"],"group":"ミーティングルーム"},{"no":"12","text":"窓や出入り口、物置の鍵じまりはできるか。","methods":["目視","作動"],"group":"ミーティングルーム"},{"no":"13","text":"ブラインドに損傷はないか。正常に作動するか。","methods":["目視","作動"],"group":"ミーティングルーム"},{"no":"14","text":"固定式ホワイトボードはしっかり取り付けられているか。\n移動式ホワイトボードも含めて、破損や故障はないか。","methods":["目視","振動","負荷"],"group":"ミーティングルーム"},{"no":"15","text":"照明器具の不具合やスイッチ、コンセント、コードに不良箇所はないか。","methods":["目視","作動"],"group":"ミーティングルーム"},{"no":"16","text":"冷暖房器具の破損や不具合はないか。","methods":["目視","作動"],"group":"ミーティングルーム"},{"no":"17","text":"換気扇は正常に作動するか。","methods":["目視","作動"],"group":"ミーティングルーム"},{"no":"18","text":"可動式のスクリーンは正常に作動するか。","methods":["目視","作動"],"group":"ミーティングルーム"},{"no":"19","text":"防犯用具は取り出しやすい箇所にあるか。","methods":["目視"],"group":"ミーティングルーム"},{"no":"21","text":"出入り口や足元の引き戸の開閉はスムーズか。","methods":["目視","作動"],"group":"アリーナ"},{"no":"22","text":"出入り口や引き戸の鍵じまりはできるか。","methods":["目視","作動"],"group":"アリーナ"},{"no":"23","text":"照明はすべて点灯するか。落下の恐れはないか。","methods":["目視","作動"],"group":"アリーナ"},{"no":"24","text":"壁面や天井に、破損やシミ、雨漏りはないか。","methods":["目視"],"group":"アリーナ"},{"no":"25","text":"床面にささくれや破損はないか。滑りやすくなっていないか。","methods":["目視","負荷"],"group":"アリーナ"},{"no":"26","text":"固定式バスケットゴールにぐらつきはないか。","methods":["目視","振動","作動"],"group":"アリーナ"},{"no":"27","text":"館内の設備・用具類は安全に固定され、正常に作動するか。","methods":["目視","振動","負荷","作動"],"group":"アリーナ"},{"no":"28","text":"用具は整備され、倒れることはないか。","methods":["目視","振動","負荷"],"group":"アリーナ"},{"no":"29","text":"イスや机の収納台車は安全に動くか。","methods":["目視","作動"],"group":"アリーナ"},{"no":"30","text":"カーテンやレールに破損故障はないか。","methods":["目視","作動"],"group":"アリーナ"},{"no":"31","text":"（２階）「立入禁止」の札が、見えるように表示されているか。","methods":["目視"],"group":"アリーナ"},{"no":"32","text":"（２階）窓・窓ガラス等に損傷はないか。鍵じまりはできるか。","methods":["目視","作動"],"group":"アリーナ"},{"no":"33","text":"（２階）カーテン（暗幕・レール等）に損傷はないか。","methods":["目視"],"group":"アリーナ"},{"no":"34","text":"防犯用具は取り出しやすい箇所にあるか。","methods":["目視"],"group":"アリーナ"},{"no":"35","text":"ステージ、ステージ脇の照明はすべて点灯するか。落下の恐れはないか。","methods":["目視","作動"],"group":"ステージ"},{"no":"36","text":"垂れ幕、カーテンやレールに破損故障はないか。正常に作動するか。","methods":["目視","作動"],"group":"ステージ"},{"no":"37","text":"２階への「立入禁止」の札が、見えるように表示されているか。","methods":["目視"],"group":"ステージ"},{"no":"38","text":"吊り看板の乗降ハンドルは滑らかに回せるか。","methods":["目視","作動"],"group":"ステージ"},{"no":"39","text":"（放送室）鍵はかかるか。照明は点灯するか。","methods":["目視","作動"],"group":"ステージ"},{"no":"40","text":"（放送室）放送機材は正常に作動するか。","methods":["目視","作動"],"group":"ステージ"}]},{"sheet":"１５ 屋外体育倉庫","title":"１５．屋外体育倉庫","inspector":null,"items":[{"no":"1","text":"出入り口の戸に破損はないか。","methods":["目視","振動","作動"],"group":""},{"no":"2","text":"内壁に破損はないか。","methods":["目視","打音","負荷"],"group":""},{"no":"3","text":"床面は滑りやすくなっていないか。","methods":["目視","負荷"],"group":""},{"no":"4","text":"戸は正常に作動し、損傷・故障はないか。","methods":["目視","振動","作動"],"group":""},{"no":"5","text":"鍵はしっかりかかるか。使用時以外は施錠されているか。","methods":["目視","作動"],"group":""},{"no":"6","text":"用具は所定の位置に整頓されているか。","methods":["目視"],"group":""},{"no":"7","text":"用具の不良箇所はないか。","methods":["目視","振動","負荷"],"group":""},{"no":"8","text":"走り高跳び、棒高跳びの支柱、ポール、バーは破損していないか。","methods":["目視","振動","負荷"],"group":""}]},{"sheet":"１６ プール・更衣室・機械室","title":"１６．プール・更衣室・機械室","inspector":null,"items":[{"no":"1","text":"フェンスは破損していないか。","methods":["目視"],"group":""},{"no":"2","text":"出入り口、脱衣所に損傷はなく、鍵はしっかりかかるか。","methods":["目視","作動"],"group":""},{"no":"3","text":"床面の破損はないか。","methods":["目視","打音","負荷"],"group":""},{"no":"4","text":"プールサイドに破損はないか。","methods":["目視"],"group":""},{"no":"5","text":"日よけは固定され、揺れたり、転倒したりしないか。","methods":["打音","振動","負荷"],"group":""},{"no":"6","text":"プール（水槽）に危険物や異物が混入していないか。","methods":["目視"],"group":""},{"no":"7","text":"排水溝の蓋は外れやすくなっていないか。","methods":["振動","負荷"],"group":""},{"no":"8","text":"プール内に危険物は放置されていないか。","methods":["目視"],"group":""},{"no":"9","text":"シャワー、蛇口等の設備は破損していないか。","methods":["目視","作動"],"group":""},{"no":"10","text":"内線電話は正常に作動するか。","methods":["作動"],"group":""},{"no":"11","text":"機械室は施錠されているか。","methods":["目視","作動"],"group":""},{"no":"12","text":"水質検査キットや塩素などの薬品は、所定の位置に保管されているか。","methods":["目視"],"group":""},{"no":"13","text":"用具入れは整頓され、鍵がかかるか。","methods":["目視","作動"],"group":""},{"no":"14","text":"トイレのスリッパは破損していないか。","methods":["目視"],"group":""},{"no":"15","text":"便器等の破損、つまり、汚れはないか。","methods":["目視"],"group":""}]},{"sheet":"１７ 遊具施設","title":"１７．遊具施設（１）","inspector":null,"items":[{"no":"1","text":"支柱の地面との接地部分に腐食はないか。","methods":["目視","打音","振動","負荷"],"group":"ブランコ 東・南"},{"no":"2","text":"支柱にぐらつき、損傷、腐食はないか。","methods":["目視","打音","振動","負荷"],"group":"ブランコ 東・南"},{"no":"3","text":"腰かけ板、くさりに摩滅や損傷はないか。","methods":["目視","振動","負荷","作動"],"group":"ブランコ 東・南"},{"no":"4","text":"つり下げ部分のフックに摩滅や損傷はないか。","methods":["目視","振動","負荷","作動"],"group":"ブランコ 東・南"},{"no":"5","text":"ボルト、ナットにゆるみ、損傷はないか。","methods":["目視","打音","振動","負荷"],"group":"ブランコ 東・南"},{"no":"6","text":"周辺に危険物は放置されていないか。","methods":["目視"],"group":"ブランコ 東・南"},{"no":"7","text":"支柱の地面との接地部分に腐食はないか。","methods":["目視","打音","振動","負荷"],"group":"鉄棒 東・南 (高鉄棒)"},{"no":"8","text":"支柱にぐらつき、損傷、腐食はないか。","methods":["目視","打音","振動","負荷"],"group":"鉄棒 東・南 (高鉄棒)"},{"no":"9","text":"溶接部分に損傷や腐食はないか。","methods":["目視","打音","振動","負荷"],"group":"鉄棒 東・南 (高鉄棒)"},{"no":"10","text":"ボルト、ナットにゆるみ、損傷はないか。","methods":["目視","打音","振動","負荷"],"group":"鉄棒 東・南 (高鉄棒)"},{"no":"11","text":"遊具下や周辺に危険物は放置されていないか。","methods":["目視"],"group":"鉄棒 東・南 (高鉄棒)"},{"no":"12","text":"砂場の砂は十分足りているか。","methods":["目視"],"group":"砂場"},{"no":"13","text":"コンクリート部分がむき出しになっていないか。","methods":["目視"],"group":"砂場"},{"no":"14","text":"動かないようしっかり固定されているか。","methods":["目視","振動","負荷"],"group":"サッカーゴール"},{"no":"15","text":"本体にゆがみはないか。","methods":["目視","振動","負荷"],"group":"サッカーゴール"},{"no":"16","text":"接地部分に損傷や腐食はないか。","methods":["目視","打音","振動"],"group":"サッカーゴール"},{"no":"17","text":"接合部分に損傷や腐食はないか。","methods":["目視","打音","振動","負荷"],"group":"サッカーゴール"},{"no":"18","text":"ゴールネットに破損はないか。","methods":["目視"],"group":"サッカーゴール"},{"no":"19","text":"地面との設置部分にぐらつき、損傷はないか。","methods":["目視","打音","振動","負荷"],"group":"タイヤ"},{"no":"20","text":"タイヤのゴムに損傷はないか。","methods":["目視","打音","振動","負荷"],"group":"タイヤ"},{"no":"21","text":"遊具下や周辺に危険物は放置されていないか。","methods":["目視"],"group":"タイヤ"},{"no":"22","text":"支柱の地面との接地部分に腐食はないか。","methods":["目視","打音","振動","負荷"],"group":"ジャングルジム"},{"no":"23","text":"支柱にぐらつき、損傷、腐食はないか。","methods":["目視","打音","振動","負荷"],"group":"ジャングルジム"},{"no":"24","text":"溶接部分に損傷や腐食はないか。","methods":["目視","打音","振動","負荷"],"group":"ジャングルジム"},{"no":"25","text":"ボルト、ナットにゆるみ、損傷はないか。","methods":["目視","打音","振動","負荷"],"group":"ジャングルジム"},{"no":"26","text":"周辺に危険物は放置されていないか。","methods":["目視"],"group":"ジャングルジム"},{"no":"27","text":"支柱の地面との接地部分に腐食はないか。","methods":["目視","打音","振動","負荷"],"group":"ジャングルネット"},{"no":"28","text":"支柱にぐらつき、損傷、腐食はないか。","methods":["目視","打音","振動","負荷"],"group":"ジャングルネット"},{"no":"29","text":"チェーンや溶接部に損傷や腐食はないか。","methods":[],"group":"ジャングルネット"},{"no":"30","text":"ボルト、ナットにゆるみ、損傷はないか。","methods":[],"group":"ジャングルネット"},{"no":"31","text":"周辺に危険物は放置されていないか。","methods":["目視"],"group":"ジャングルネット"},{"no":"32","text":"支柱の地面との接地部分に腐食はないか。","methods":["目視","打音","振動","負荷"],"group":"うんてい"},{"no":"33","text":"支柱にぐらつき、損傷、腐食はないか。","methods":["目視","打音","振動","負荷"],"group":"うんてい"},{"no":"34","text":"溶接部分に損傷や腐食はないか。","methods":["目視","打音","振動","負荷"],"group":"うんてい"},{"no":"35","text":"ボルト、ナットにゆるみ、損傷はないか。","methods":["目視","打音","振動","負荷"],"group":"うんてい"},{"no":"36","text":"遊具下や周辺に危険物は放置されていないか。","methods":["目視"],"group":"うんてい"},{"no":"37","text":"支柱の地面との接地部分に腐食はないか。","methods":["目視","打音","振動","負荷"],"group":"のぼり棒"},{"no":"38","text":"支柱にぐらつき、損傷、腐食はないか。","methods":["目視","打音","振動","負荷"],"group":"のぼり棒"},{"no":"39","text":"溶接部分に損傷や腐食はないか。","methods":["目視","打音","振動","負荷"],"group":"のぼり棒"},{"no":"40","text":"ボルト、ナットにゆるみ、損傷はないか。","methods":["目視","打音","振動","負荷"],"group":"のぼり棒"},{"no":"41","text":"遊具下や周辺に危険物は放置されていないか。","methods":["目視"],"group":"のぼり棒"}]},{"sheet":"１８ 給食室","title":"１８．給食室","inspector":"相馬","items":[{"no":"1","text":"床は滑りやすく、転倒のおそれはないか。","methods":["目視","負荷"],"group":""},{"no":"2","text":"壁や天井に破損はないか。落下しそうなものはないか。","methods":["目視"],"group":""},{"no":"3","text":"掲示物、額等に落下しそうなものはないか。余分な釘や画鋲などはないか。","methods":["目視"],"group":""},{"no":"4","text":"出入り口や窓のガラスに破損はないか。外れやすくなっていないか。","methods":["目視","振動"],"group":""},{"no":"5","text":"出入り口や窓はスムーズに開閉できるか。鍵がしっかりかかるか。","methods":["目視","作動"],"group":""},{"no":"6","text":"照明は点灯するか。スイッチやコンセント部分に破損はないか。","methods":["目視","作動"],"group":""},{"no":"7","text":"手洗い蛇口、鏡は破損していないか。","methods":["目視","作動"],"group":""},{"no":"8","text":"給食用食器や調理器具、食缶は、破損、腐食していないか。","methods":["目視","作動"],"group":""},{"no":"9","text":"刃物など危険を伴う器具類は、適切に保管されているか。","methods":["目視"],"group":""},{"no":"10","text":"水漏れはしていないか。ガス漏れはしていないか。","methods":["目視","作動"],"group":""},{"no":"11","text":"食材は所定の場所に衛生的に保管してあるか。","methods":["目視"],"group":""},{"no":"12","text":"配膳台は破損していないか。","methods":["目視","作動"],"group":""},{"no":"13","text":"台車は破損、故障していないか。","methods":["目視","振動","負荷","作動"],"group":""},{"no":"14","text":"冷蔵庫などの電気機器に、故障や不具合は見られないか。","methods":["目視","作動"],"group":""},{"no":"15","text":"エアコンは正常に作動し、温度は適切に管理されているか。","methods":["目視","作動"],"group":""},{"no":"16","text":"リフト・エレべーター等は使用時以外動かないようにしてあるか。","methods":["目視","作動"],"group":""},{"no":"17","text":"緊急時にすぐ手の届くところに消化器が設置されているか。","methods":["目視"],"group":""},{"no":"18","text":"給食配繕室は、使用時以外、施錠されているか。","methods":["目視","作動"],"group":""}]},{"sheet":"１９ 校舎等外環施設・設備","title":"１９．校舎等外環施設・設備（１）","inspector":null,"items":[{"no":"1","text":"釘や危険な物が刺さっていないか。","methods":["目視"],"group":"グラウンド・校舎敷地等"},{"no":"2","text":"極端な凹みや盛り上がりはないか。","methods":["目視"],"group":"グラウンド・校舎敷地等"},{"no":"3","text":"その他の異常はないか。","methods":["目視"],"group":"グラウンド・校舎敷地等"},{"no":"4","text":"マンホールの蓋・送気口格子蓋の破損はないか。","methods":["目視","振動","負荷"],"group":"グラウンド・校舎敷地等"},{"no":"5","text":"立ち木の枝など植物に危険な物はないか。","methods":["目視"],"group":"グラウンド・校舎敷地等"},{"no":"6","text":"樹木に邪魔な枝や害虫はないか。","methods":["目視"],"group":"グラウンド・校舎敷地等"},{"no":"7","text":"地割れや大きな陥没はないか。","methods":["目視"],"group":"グラウンド・校舎敷地等"},{"no":"8","text":"コンクリート通路に亀裂や凸凹はないか。","methods":["目視","負荷"],"group":"グラウンド・校舎敷地等"},{"no":"9","text":"門柱にぐらつき、損傷、腐食はないか。","methods":["目視","打音","振動","負荷"],"group":"門柱・門扉"},{"no":"10","text":"門扉に損傷、腐食はないか。","methods":["目視","打音","振動","負荷"],"group":"門柱・門扉"},{"no":"11","text":"門扉が倒れないように転倒防止がしてあるか。","methods":["目視","振動","負荷","作動"],"group":"門柱・門扉"},{"no":"13","text":"出入り口に危険物が放置されていないか。","methods":["目視"],"group":"門柱・門扉"},{"no":"14","text":"支柱と埋め込み部分のコンクリートとの接点に腐食はないか。 ","methods":["目視","打音","振動","負荷"],"group":"掲揚塔"},{"no":"15","text":"支柱に損傷や腐食はないか。","methods":["目視","打音","振動","負荷"],"group":"掲揚塔"},{"no":"16","text":"掲揚塔付近に危険物は放置されていないか。","methods":["目視"],"group":"掲揚塔"},{"no":"17","text":"掲揚の妨げとなる樹木等はないか。","methods":["目視"],"group":"掲揚塔"},{"no":"18","text":"フェンスが傾いたり、ぐらついたりしていないか。","methods":["目視","打音","振動","負荷"],"group":"柵・フェンス等"},{"no":"19","text":"フェンスの破損などはないか。","methods":["目視","振動","負荷"],"group":"柵・フェンス等"},{"no":"20","text":"その他の異状はないか。","methods":["目視"],"group":"柵・フェンス等"},{"no":"21","text":"区画整備されているか。","methods":["目視"],"group":"駐車場"},{"no":"22","text":"外来や障害者用の駐車場は確保してあるか。","methods":["目視"],"group":"駐車場"},{"no":"24","text":"不審な車は駐車していないか。","methods":["目視"],"group":"駐車場"},{"no":"25","text":"緊急時（落雷など）の安全対策（避難場所）は確保・徹底されているか。","methods":["目視"],"group":"その他"},{"no":"26","text":"照明設備の安全管理（塔の腐食・電気の漏電など）は適切に行われているか。","methods":["目視","打音","振動","負荷","作動"],"group":"その他"},{"no":"27","text":"排水口や側溝が埋まって排水の妨げになっていないか。","methods":["目視"],"group":"その他"},{"no":"28","text":"藤棚に危険な箇所はないか。","methods":["目視"],"group":"その他"}]},{"sheet":"２０ 多目的室","title":"２０．多目的室","inspector":null,"items":[{"no":"1","text":"窓・窓ガラス・出入り口の扉は外れやすくないか。","methods":["目視","作動"],"group":""},{"no":"2","text":"窓・窓ガラス等に損傷はないか。鍵じまりはできるか。","methods":["目視","作動"],"group":""},{"no":"3","text":"カーテン（暗幕・レール等）に損傷はないか。","methods":["目視","作動"],"group":""},{"no":"4","text":"ＰＣ・ＴＶ等電気製品の故障、プラグやコードの損傷はないか。","methods":["目視","作動"],"group":""},{"no":"5","text":"備品は所定の位置に収納されているか。","methods":["目視"],"group":""},{"no":"6","text":"照明器具の不具合やスイッチ、コンセント、コードに不良箇所はないか。","methods":["目視","作動"],"group":""},{"no":"7","text":"コンセントの差し込み・接続部分に接触不良や損傷はないか。","methods":["目視","作動"],"group":""},{"no":"8","text":"室内の明るさは適切か。電灯は切れていないか。","methods":["目視"],"group":""},{"no":"9","text":"床面に浮き、摩耗、破損、ゆがみはないか。滑りやすくないか。","methods":["目視","負荷","作動"],"group":""},{"no":"10","text":"壁に破損はないか。落下しそうなものはないか。","methods":["目視"],"group":""},{"no":"11","text":"掲示の画鋲等はしっかりととめられているか。","methods":["目視"],"group":""},{"no":"12","text":"机・椅子にささくれがあったり、ネジの緩みや釘などが出ていないか。","methods":["目視","振動"],"group":""},{"no":"13","text":"机は破損していないか。","methods":["目視"],"group":""},{"no":"14","text":"冷・暖房器具の破損や不具合はないか。","methods":["目視","作動"],"group":""},{"no":"15","text":"火元責任者は明確に表示されているか。","methods":["目視"],"group":""},{"no":"16","text":"天井に破損やシミ、雨漏りはないか。","methods":["目視"],"group":""},{"no":"17","text":"内線電話は正常に作動するか。","methods":["作動"],"group":""}]},{"sheet":"２１ 会議室","title":"２１．会議室","inspector":null,"items":[{"no":"1","text":"窓・窓ガラス・出入り口の扉は外れやすくないか。","methods":["目視","作動"],"group":""},{"no":"2","text":"窓・窓ガラス等に損傷はないか。鍵じまりはできるか。","methods":["目視","作動"],"group":""},{"no":"3","text":"カーテン（暗幕・レール等）に損傷はないか。","methods":["目視","作動"],"group":""},{"no":"4","text":"照明器具の不具合やスイッチ、コンセント、コードに不良箇所はないか。","methods":["目視","作動"],"group":""},{"no":"5","text":"コンセントの差し込み・接続部分に接触不良や損傷はないか。","methods":["目視","作動"],"group":""},{"no":"6","text":"室内の明るさは適切か。電灯は切れていないか。","methods":["目視"],"group":""},{"no":"7","text":"黒板やチョーク入れ等に破損や故障はないか。","methods":["目視","作動"],"group":""},{"no":"8","text":"床面に浮き、摩耗、破損、ゆがみはないか。滑りやすくないか。","methods":["目視","負荷","作動"],"group":""},{"no":"9","text":"壁に破損はないか。落下しそうなものはないか。","methods":["目視"],"group":""},{"no":"10","text":"掲示の画鋲等はしっかりととめられているか。","methods":["目視"],"group":""},{"no":"11","text":"机・椅子にささくれがあったり、ネジの緩みや釘などが出ていないか。","methods":["目視","振動"],"group":""},{"no":"12","text":"机は破損していないか。","methods":["目視"],"group":""},{"no":"13","text":"火元責任者は明確に表示されているか。","methods":["目視"],"group":""},{"no":"14","text":"天井に破損やシミ、雨漏りはないか。","methods":["目視"],"group":""},{"no":"15","text":"内線電話は正常に作動するか。","methods":["作動"],"group":""}]},{"sheet":"２１ 資料室１･2","title":"２１．資料室１･2","inspector":null,"items":[{"no":"1","text":"窓・窓ガラス・出入り口の扉は外れやすくないか。","methods":["目視","作動"],"group":""},{"no":"2","text":"窓・窓ガラス等に損傷はないか。鍵じまりはできるか。","methods":["目視","作動"],"group":""},{"no":"3","text":"カーテン（暗幕・レール等）に損傷はないか。","methods":["目視","作動"],"group":""},{"no":"4","text":"照明器具の不具合やスイッチ、コンセント、コードに不良箇所はないか。","methods":["目視","作動"],"group":""},{"no":"5","text":"コンセントの差し込み・接続部分に接触不良や損傷はないか。","methods":["目視","作動"],"group":""},{"no":"6","text":"室内の明るさは適切か。電灯は切れていないか。","methods":["目視"],"group":""},{"no":"7","text":"黒板やチョーク入れ等に破損や故障はないか。","methods":["目視","作動"],"group":""},{"no":"8","text":"床面に浮き、摩耗、破損、ゆがみはないか。滑りやすくないか。","methods":["目視","負荷","作動"],"group":""},{"no":"9","text":"壁に破損はないか。落下しそうなものはないか。","methods":["目視"],"group":""},{"no":"10","text":"掲示の画鋲等はしっかりととめられているか。","methods":["目視"],"group":""},{"no":"11","text":"机・椅子にささくれがあったり、ネジの緩みや釘などが出ていないか。","methods":["目視","振動"],"group":""},{"no":"12","text":"机は破損していないか。","methods":["目視"],"group":""},{"no":"13","text":"火元責任者は明確に表示されているか。","methods":["目視"],"group":""},{"no":"14","text":"天井に破損やシミ、雨漏りはないか。","methods":["目視"],"group":""}]},{"sheet":"２２相談室","title":"２２．相談室","inspector":null,"items":[{"no":"1","text":"窓・窓ガラス・出入り口の扉は外れやすくないか。","methods":["目視","作動"],"group":""},{"no":"2","text":"窓・窓ガラス等に損傷はないか。鍵じまりはできるか。","methods":["目視","作動"],"group":""},{"no":"3","text":"カーテン（暗幕・レール等）に損傷はないか。","methods":["目視","作動"],"group":""},{"no":"4","text":"照明器具の不具合やスイッチ、コンセント、コードに不良箇所はないか。","methods":["目視","作動"],"group":""},{"no":"5","text":"コンセントの差し込み・接続部分に接触不良や損傷はないか。","methods":["目視","作動"],"group":""},{"no":"6","text":"室内の明るさは適切か。電灯は切れていないか。","methods":["目視"],"group":""},{"no":"7","text":"壁面の画鋲などが正しく使われているか。","methods":["目視","作動"],"group":""},{"no":"8","text":"床面に浮き、摩耗、破損、ゆがみはないか。滑りやすくないか。","methods":["目視","負荷","作動"],"group":""},{"no":"9","text":"壁に破損はないか。落下しそうなものはないか。","methods":["目視"],"group":""},{"no":"10","text":"掲示の画鋲等はしっかりととめられているか。","methods":["目視"],"group":""},{"no":"11","text":"机・椅子にささくれがあったり、ネジの緩みや釘などが出ていないか。","methods":["目視","振動"],"group":""},{"no":"12","text":"机は破損していないか。","methods":["目視"],"group":""},{"no":"13","text":"火元責任者は明確に表示されているか。","methods":["目視"],"group":""},{"no":"14","text":"天井に破損やシミ、雨漏りはないか。","methods":["目視"],"group":""},{"no":"15","text":"内線電話は正常に作動するか。","methods":["作動"],"group":""}]},{"sheet":"２３更衣室","title":"２３．更衣室","inspector":null,"items":[{"no":"1","text":"出入り口の扉は外れやすくないか。","methods":["目視","作動"],"group":""},{"no":"2","text":"窓・窓ガラス等に損傷はないか。鍵じまりはできるか。","methods":["目視","作動"],"group":""},{"no":"3","text":"照明器具の不具合やスイッチ、コンセント、コードに不良箇所はないか。","methods":["目視","作動"],"group":""},{"no":"4","text":"コンセントの差し込み・接続部分に接触不良や損傷はないか。","methods":["目視","作動"],"group":""},{"no":"5","text":"室内の明るさは適切か。電灯は切れていないか。","methods":["目視"],"group":""},{"no":"6","text":"床面に浮き、摩耗、破損、ゆがみはないか。滑りやすくないか。","methods":["目視","負荷","作動"],"group":""},{"no":"7","text":"壁に破損はないか。落下しそうなものはないか。","methods":["目視"],"group":""},{"no":"8","text":"机・椅子にささくれがあったり、ネジの緩みや釘などが出ていないか。","methods":["目視","振動"],"group":""},{"no":"9","text":"机は破損していないか。","methods":["目視"],"group":""},{"no":"10","text":"火元責任者は明確に表示されているか。","methods":["目視"],"group":""},{"no":"11","text":"天井に破損やシミ、雨漏りはないか。","methods":["目視","振動"],"group":""},{"no":"12","text":"戸棚・ロッカーに損傷はないか。","methods":["目視","作動"],"group":""},{"no":"13","text":"照明器具に損傷・落下のおそれはないか。","methods":["目視"],"group":""},{"no":"14","text":"冷・暖房器具の破損や不具合はないか。","methods":["目視","作動"],"group":""},{"no":"15","text":"内壁に剥離や亀裂はないか。","methods":["目視"],"group":""}]},{"sheet":"２４校長室 ","title":"２４．校長室","inspector":null,"items":[{"no":"1","text":"窓・窓ガラス・出入り口の扉は外れやすくないか。","methods":["目視","作動"],"group":""},{"no":"2","text":"窓・窓ガラス等に損傷はないか。鍵じまりはできるか。","methods":["目視","作動"],"group":""},{"no":"3","text":"カーテン（暗幕・レール等）に損傷はないか。","methods":["目視","作動"],"group":""},{"no":"4","text":"照明器具の不具合やスイッチ、コンセント、コードに不良箇所はないか。","methods":["目視","作動"],"group":""},{"no":"5","text":"コンセントの差し込み・接続部分に接触不良や損傷はないか。","methods":["目視","作動"],"group":""},{"no":"6","text":"室内の明るさは適切か。電灯は切れていないか。","methods":["目視"],"group":""},{"no":"7","text":"壁面の画鋲などが正しく使われているか。","methods":["目視","作動"],"group":""},{"no":"8","text":"床面に浮き、摩耗、破損、ゆがみはないか。滑りやすくないか。","methods":["目視","負荷","作動"],"group":""},{"no":"9","text":"壁に破損はないか。落下しそうなものはないか。","methods":["目視"],"group":""},{"no":"10","text":"掲示の画鋲等はしっかりととめられているか。","methods":["目視"],"group":""},{"no":"11","text":"机・椅子にささくれがあったり、ネジの緩みや釘などが出ていないか。","methods":["目視","振動"],"group":""},{"no":"12","text":"机は破損していないか。","methods":["目視"],"group":""},{"no":"13","text":"火元責任者は明確に表示されているか。","methods":["目視"],"group":""},{"no":"14","text":"天井に破損やシミ、雨漏りはないか。","methods":["目視"],"group":""},{"no":"15","text":"内線電話は正常に作動するか。","methods":["作動"],"group":""}]},{"sheet":"２５児童会室","title":"２５．児童会室","inspector":null,"items":[{"no":"1","text":"窓・窓ガラス・出入り口の扉は外れやすくないか。","methods":["目視","作動"],"group":""},{"no":"2","text":"窓・窓ガラス等に損傷はないか。鍵じまりはできるか。","methods":["目視","作動"],"group":""},{"no":"3","text":"カーテン（暗幕・レール等）に損傷はないか。","methods":["目視","作動"],"group":""},{"no":"4","text":"べランダ・バルコニーに破損、損傷はないか。","methods":["目視","打音","振動","負荷"],"group":""},{"no":"5","text":"ＰＣ・ＴＶ等電気製品の故障、プラグやコードの損傷はないか。","methods":["目視","作動"],"group":""},{"no":"6","text":"照明器具の不具合やスイッチ、コンセント、コードに不良箇所はないか。","methods":["目視","作動"],"group":""},{"no":"7","text":"コンセントの差し込み・接続部分に接触不良や損傷はないか。","methods":["目視","作動"],"group":""},{"no":"8","text":"室内の明るさは適切か。電灯は切れていないか。","methods":["目視"],"group":""},{"no":"9","text":"黒板やチョーク入れ等に破損や故障はないか。","methods":["目視","作動"],"group":""},{"no":"10","text":"床面に浮き、摩耗、破損、ゆがみはないか。滑りやすくないか。","methods":["目視","負荷","作動"],"group":""},{"no":"11","text":"壁に破損はないか。落下しそうなものはないか。","methods":["目視"],"group":""},{"no":"12","text":"掲示の画鋲等はしっかりととめられているか。","methods":["目視"],"group":""},{"no":"13","text":"机・椅子にささくれがあったり、ネジの緩みや釘などが出ていないか。","methods":["目視","振動"],"group":""},{"no":"14","text":"教卓は破損していないか。","methods":["目視"],"group":""},{"no":"15","text":"冷・暖房器具の破損や不具合はないか。","methods":["目視","作動"],"group":""},{"no":"16","text":"火元責任者は明確に表示されているか。","methods":["目視"],"group":""},{"no":"17","text":"天井に破損やシミ、雨漏りはないか。","methods":["目視"],"group":""},{"no":"18","text":"内線電話は正常に作動するか。","methods":["作動"],"group":""},{"no":"19","text":"（冬季）加湿器は正常に作動するか。","methods":["作動"],"group":""},{"no":"20","text":"防犯用具は取り出しやすい箇所にあるか。","methods":["目視"],"group":""}]}];
+
+/* 点検表の番号・名前（上の SHEETS の並び順に対応）。id は記録のキーに使うので変えない */
+const SHEET_DEFS = [
+  ['cls','1','教室',0], ['cor','2','廊下',1], ['stp','2.5','階段',2], ['ent','3','昇降口',3], ['frt','3','正面玄関',4],
+  ['wc','4','トイレ・水道場',5], ['sci','5','理科室・準備室',6], ['mus','6','音楽室・準備室',7], ['bro','7','放送室',8],
+  ['art','8','図工室・学習室',9], ['hom','9','家庭科室',10], ['pcr','10','パソコン室',11], ['nur','11','保健室',12],
+  ['lib','12','図書室',13], ['stf','13','職員室・印刷室',14], ['gym','14','体育館',15], ['sto','15','屋外体育倉庫',16],
+  ['pol','16','プール・更衣室・機械室',17], ['ply','17','遊具施設',18], ['kit','18','給食室',19], ['out','19','校舎等外環施設・設備',20],
+  ['mlt','20','多目的室',21], ['mtg','21','会議室',22], ['arc','21','資料室１･2',23], ['cns','22','相談室',24], ['lck','23','更衣室',25],
+  ['pri','24','校長室',26], ['stu','25','児童会室',27]
+];
+const WINTER = [12,1,2,3];
+/* 令和8年度に学校で決めた変更 */
+const SHEET_CHANGES = {
+  cls: {months:{'19':WINTER}},
+  stu: {months:{'19':WINTER}},
+  gym: {months:{'9':WINTER}},
+  hom: {remove:['16']},   /* No.8 と同じ内容（消火器は常備されているか）のため統合 */
+  kit: {add:[{id:'19', text:'検収室 棚のゆがみ'}, {id:'20', text:'不審物（カメラ等）'}]}
+};
+function defaultSheets(){
+  return SHEET_DEFS.map(([id, n, name, idx]) => {
+    const ch = SHEET_CHANGES[id] || {};
+    let items = SHEETS[idx].items.map(it => ({id:String(it.no), text:it.text.trim(), methods:it.methods || [], group:it.group || '',
+      months:(ch.months && ch.months[it.no]) || null}));
+    if (ch.remove) items = items.filter(it => !ch.remove.includes(it.id));
+    if (ch.add) items = items.concat(ch.add.map(x => ({id:x.id, text:x.text, methods:[], group:'', months:null})));
+    return {id, n, name, items};
+  });
+}
+
+/* 点検箇所と班（令和8年度 安全点検 班と場所.xlsx より）。「設定」で保存した内容が優先される */
+const PL = (sheet, s) => s.split(' ').map(x => { const [id, name] = x.split(':'); return {id:sheet + '-' + id, sheet, name}; });
+const FIX = (ids) => ids.split(' ').map(id => ({id, sheet:id, name:SHEET_DEFS.find(d => d[0] === id)[2]}));
+const DEFAULT_PLACES = [].concat(
+  PL('cls', 'k11:1年1組教室 k12:1年2組教室 k21:2年1組教室 k22:2年2組教室 k31:3年1組教室 k32:3年2組教室 k41:4年1組教室 k42:4年2組教室 k51:5年1組教室 k52:5年2組教室 k61:6年1組教室 k62:6年2組教室 k63:6年3組教室 sakura:さくら教室 himawari:ひまわり教室 kaede:かえで教室 tsukushi:つくし教室 tanpopo:たんぽぽ教室'),
+  PL('cor', 'e1:1階東廊下 w1:1階西廊下 b1:1階渡り廊下 n1:北館1階廊下 e2:2階東廊下 w2:2階西廊下 b2:2階渡り廊下 n2:北館2階廊下 e3:3階東廊下 w3:3階西廊下'),
+  PL('stp', 'e:東階段 w:西階段 c:中央階段 n:北階段'),
+  PL('ent', 'e:東昇降口 w:西昇降口'),
+  FIX('frt'),
+  PL('wc', 'e1:1階東トイレ・水道場 s1:1階職員トイレ・水道場 m1:1階多目的トイレ・水道場 n1:北館1階トイレ・水道場 e2:2階東トイレ・水道場 w2:2階西トイレ・水道場 n2:北館2階トイレ・水道場 e3:3階東トイレ・水道場 w3:3階西トイレ・水道場 gym:体育館トイレ・水道場'),
+  FIX('sci mus bro art hom pcr nur lib stf gym sto pol ply kit out mlt mtg arc cns pri stu')
+);
+const TEAM = (id, name, places) => ({id, name, members:'', places:places.split(' ')});
+const DEFAULT_TEAMS = [
+  TEAM('t1', '安全点検係・無担', 'ply out sto pol'),
+  TEAM('t2', '学校栄養士', 'kit'),
+  TEAM('t3', '教務・事務長・養護教諭', 'stf nur mtg pri'),
+  TEAM('t4', '特支ブロック', 'cls-sakura cls-himawari cls-kaede cls-tsukushi cls-tanpopo cor-n2 wc-n2 mus lib gym wc-gym'),
+  TEAM('t5', '6年ブロック', 'cls-k61 cls-k62 cls-k63 frt cns ent-e wc-e1 cor-e1 bro'),
+  TEAM('t6', '5年ブロック', 'cls-k51 cls-k52 stp-w ent-w cor-w3 wc-w3 stu hom'),
+  TEAM('t7', '4年ブロック', 'cls-k41 cls-k42 sci stp-c cor-e3 wc-e3'),
+  TEAM('t8', '3年ブロック', 'cls-k31 cls-k32 stp-n art pcr cor-n1 wc-n1'),
+  TEAM('t9', '2年ブロック', 'cls-k21 cls-k22 cor-w2 wc-s1 cor-b2 wc-w2 cor-w1 wc-m1'),
+  TEAM('t10', '1年ブロック', 'cls-k11 cls-k12 cor-e2 wc-e2 stp-e mlt arc cor-b1')
+];
+const DEFAULT_PHRASES = {
+  state:  ['破損あり','ぐらつきあり','外れやすい','動きが悪い','点灯しない','作動しない','汚れあり','亀裂・はがれ','さび・腐食','危険物あり','整頓が必要','不足している'],
+  action: ['応急処置済','修理依頼済','交換が必要','業者対応待ち','使用禁止の表示をした','担当者へ連絡済','様子を見る','次回再確認']
+};
+const METHODS = ['目視','打音','振動','負荷','作動'];
+const MONTH_PRESETS = [
+  {v:'', label:'毎月点検'},
+  {v:'12,1,2,3', label:'12〜3月のみ（冬季）'},
+  {v:'6,7,9', label:'6〜9月のみ（夏季）'},
+  {v:'4,5,6,7,9,10,11', label:'4〜11月のみ'}
+];
+
+const PERIODS = [4,5,6,7,9,10,11,12,1,2,3].map(m => ({id:String(m).padStart(2,'0'), label:m+'月', m}))
+  .concat([{id:'x1', label:'臨時1', tmp:true}, {id:'x2', label:'臨時2', tmp:true}]);
+const PERIOD_BY_ID = Object.fromEntries(PERIODS.map(p => [p.id, p]));
+
+const MARK = {
+  ok:    {sym:'✓', label:'異常なし'},
+  minor: {sym:'△', label:'異常あり（軽度）'},
+  major: {sym:'×', label:'異常あり（修理・交換）'}
+};
+
+/* ---- helpers ---- */
+const $ = (s, el) => (el || document).querySelector(s);
+const h = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = (n) => String(n).padStart(2, '0');
+const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
+function deepMerge(a, b){
+  const out = isObj(a) ? Object.assign({}, a) : {};
+  for (const k in b){ out[k] = (isObj(b[k]) && isObj(out[k])) ? deepMerge(out[k], b[k]) : (isObj(b[k]) ? deepMerge({}, b[k]) : b[k]); }
+  return out;
+}
+const clone = (o) => JSON.parse(JSON.stringify(o == null ? {} : o));
+function todayISO(){ const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function fmtDate(s){ if (!s) return ''; const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s); return m ? (+m[2]) + '/' + (+m[3]) : s; }
+function monthOf(s){ const m = /^\d{4}-(\d{2})/.exec(s || ''); return m ? +m[1] : new Date().getMonth() + 1; }
+const ls = {
+  get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
+  set(k, v){ try { localStorage.setItem(k, v); } catch(e){} },
+  del(k){ try { localStorage.removeItem(k); } catch(e){} }
+};
+function defaultPeriod(){ const m = new Date().getMonth() + 1; return m === 8 ? '09' : pad(m); }
+let uidN = 0;
+const uid = (p) => p + Date.now().toString(36) + (uidN++).toString(36);
+const normName = (s) => String(s || '').normalize('NFKC').replace(/\s+/g, '').toLowerCase();
+function monthsText(ms){
+  if (!ms || !ms.length) return '毎月';
+  const pre = MONTH_PRESETS.find(p => p.v === ms.join(','));
+  return pre ? pre.label.replace(/のみ.*$/, '') : ms.join('・') + '月';
+}
+
+/* ---- state ---- */
+const S = {
+  tab: 'check', period: defaultPeriod(), placeId: null, filter: 'all', annual: false,
+  team: ls.get('anzen-team') || '', reportView: 'screen',
+  setTab: ls.get('anzen-settab') || 'teams', openTeam: null, editSheet: null, confirm: null,
+  year: 8, config: null, places: [],
+  server: {}, records: {}, loaded: false,
+  sync: 'loading', mode: null, dirty: false, draftCfg: null
+};
+S.config = normConfig(null);
+S.year = S.config.year;
+S.places = buildPlaces(S.config);
+
+function normConfig(c){
+  c = c || {};
+  const out = {year:8, sheets:defaultSheets(), places:clone(DEFAULT_PLACES), teams:clone(DEFAULT_TEAMS), phrases:clone(DEFAULT_PHRASES),
+    seedImported: c.seedImported === true ? 'v1' : (c.seedImported || '')};
+  if (typeof c.year === 'number' && c.year > 0) out.year = c.year;
+  if (Array.isArray(c.sheets) && c.sheets.length){
+    out.sheets = c.sheets.filter(s => s && s.id).map(s => ({id:s.id, n:String(s.n == null ? '' : s.n), name:s.name || '',
+      items:(s.items || []).filter(i => i && i.id).map(i => Object.assign({id:String(i.id), text:i.text || '', methods:Array.isArray(i.methods) ? i.methods : [],
+        group:i.group || '', months:Array.isArray(i.months) && i.months.length ? i.months : null}, i.since ? {since:i.since} : {}))}));
+  }
+  if (Array.isArray(c.places)) out.places = c.places.filter(p => p && p.id && p.sheet).map(p => Object.assign({id:p.id, sheet:p.sheet, name:p.name || ''}, p.since ? {since:p.since} : {}));
+  if (Array.isArray(c.teams) && c.teams.length) out.teams = c.teams.filter(t => t && t.id).map(t => ({id:t.id, name:t.name || '', members:t.members || '', places:Array.isArray(t.places) ? t.places : []}));
+  out.moveTo = typeof c.moveTo === 'string' ? c.moveTo.trim() : '';
+  if (isObj(c.phrases)) for (const k of ['state','action']) if (Array.isArray(c.phrases[k])) out.phrases[k] = c.phrases[k].filter(Boolean);
+  return out;
+}
+function buildPlaces(cfg){
+  const byId = Object.fromEntries(cfg.sheets.map(s => [s.id, s]));
+  return cfg.places.filter(p => byId[p.sheet]).map(p => {
+    const s = byId[p.sheet];
+    return {id:p.id, sheet:s, n:s.n, name:p.name || s.name, since:p.since || '', items:s.items.map((it, i) => Object.assign({}, it, {no:String(i + 1)}))};
+  });
+}
+const placeById = (id) => S.places.find(p => p.id === id);
+const teamById = (id) => S.config.teams.find(t => t.id === id) || null;
+const teamsOfPlace = (pid) => S.config.teams.filter(t => t.places.includes(pid));
+const teamPlaces = (t) => t.places.map(placeById).filter(Boolean);
+const recKey = (placeId, period) => 'r' + S.year + '_' + placeId + '_' + period;
+function currentTeam(){ return teamById(S.team); }
+function routePlaces(){ const t = currentTeam(); return t ? teamPlaces(t) : S.places; }
+function teamLabel(r){ if (!r) return ''; const t = teamById(r.team); return t ? t.name : (r.teamName || ''); }
+function defaultTeamFor(pid){
+  const cur = currentTeam();
+  if (cur && cur.places.includes(pid)) return cur.id;
+  const ts = teamsOfPlace(pid);
+  return ts.length ? ts[0].id : (cur ? cur.id : '');
+}
+
+/* その月の最終日（途中で追加した項目・場所は、追加した月から数える） */
+function periodEnd(period){
+  const per = PERIOD_BY_ID[period];
+  if (!per || !per.m) return '';
+  const y = 2018 + S.year + (per.m < 4 ? 1 : 0);
+  return y + '-' + pad(per.m) + '-' + pad(new Date(y, per.m, 0).getDate());
+}
+const inPeriod = (x, period) => !x.since || !periodEnd(period) || periodEnd(period) >= x.since;
+const placesFor = (list, period) => list.filter(p => inPeriod(p, period));
+/* 項目がその月に点検対象か（加湿器・暖房器具は 12〜3月のみ など） */
+function itemApplies(it, period, r){
+  if (!inPeriod(it, period)) return false;
+  if (!it.months) return true;
+  const per = PERIOD_BY_ID[period];
+  const m = per.m || monthOf(r && r.date ? r.date : todayISO());
+  return it.months.includes(m);
+}
+function summarize(place, period, rOverride){
+  const r = rOverride || S.records[recKey(place.id, period)];
+  let total = 0, ok = 0, minor = 0, major = 0, open = 0;
+  for (const it of place.items){
+    if (!itemApplies(it, period, r)) continue;
+    total++;
+    const m = r && r.marks ? r.marks[it.id] : null;
+    if (m === 'ok') ok++;
+    else if (m === 'minor' || m === 'major'){
+      m === 'minor' ? minor++ : major++;
+      if (!(r.status && r.status[it.id] === 'done')) open++;
+    }
+  }
+  const marked = ok + minor + major;
+  const state = marked === 0 ? 'none' : (marked >= total ? 'done' : 'partial');
+  return {r, total, ok, minor, major, open, marked, state};
+}
+function issueLines(place, period, r){
+  const out = [];
+  for (const it of place.items){
+    const m = r && r.marks && r.marks[it.id];
+    if ((m === 'minor' || m === 'major') && itemApplies(it, period, r))
+      out.push(`No.${it.no} ${MARK[m].sym} ${(r.notes || {})[it.id] || '（内容未記入）'}${(r.status || {})[it.id] === 'done' ? '［対応済］' : ''}`);
+  }
+  return out;
+}
+function prevRecord(placeId, period){
+  const idx = PERIODS.findIndex(p => p.id === period);
+  for (let i = idx - 1; i >= 0; i--){
+    const r = S.records[recKey(placeId, PERIODS[i].id)];
+    if (r && r.marks && Object.values(r.marks).some(Boolean)) return {r, period: PERIODS[i]};
+  }
+  return null;
+}
+function frequentPhrases(){
+  const base = new Set([...S.config.phrases.state, ...S.config.phrases.action]);
+  const count = {};
+  for (const k in S.records){
+    const notes = S.records[k].notes || {};
+    for (const n in notes){
+      String(notes[n] || '').split(/[、,，。\n]/).map(s => s.trim()).filter(s => s && s.length <= 20 && !base.has(s)).forEach(s => { count[s] = (count[s] || 0) + 1; });
+    }
+  }
+  return Object.entries(count).filter(([, c]) => c >= 2).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([s]) => s);
+}
+
+/* 紙の記録（初期データ.gs）を展開：記録のある月は、指定のない項目をすべて ✓ にする */
+function expandSeed(seed){
+  const places = buildPlaces(S.config);
+  const year = seed.year || S.year;
+  const records = {};
+  const stamp = new Date().toISOString();
+  for (const sp of seed.places){
+    const place = places.find(p => p.id === sp.place);
+    if (!place) continue;
+    const team = S.config.teams.find(t => t.id === sp.team);
+    for (const per in sp.dates){
+      const r = {year, placeId:place.id, period:per, placeName:place.name, periodLabel:PERIOD_BY_ID[per].label,
+        date:sp.dates[per], team:sp.team, teamName:team ? team.name : '', marks:{}, notes:{}, status:{}, memo:'',
+        source:'紙の記録から取り込み', updatedAt:stamp, seededAt:stamp};
+      for (const it of place.items) if (itemApplies(it, per, r)) r.marks[it.id] = 'ok';
+      for (const [id, pers, mark, note, donePers] of (sp.issues || [])){
+        if (!pers.includes(per) || !place.items.some(it => it.id === id)) continue;
+        r.marks[id] = mark;
+        const n = typeof note === 'string' ? note : (note && note[per]) || '';
+        if (n) r.notes[id] = n;
+        if (donePers && donePers.includes(per)) r.status[id] = 'done';
+      }
+      for (const id in (sp.blank || {})) if (sp.blank[id].includes(per)) delete r.marks[id];
+      if (sp.memo && sp.memo[per]) r.memo = sp.memo[per];
+      const s = summarize(place, per, r);
+      r.counts = {ok:s.ok, minor:s.minor, major:s.major, open:s.open};
+      r.summaryLines = issueLines(place, per, r).join('\n');
+      records['r' + year + '_' + place.id + '_' + per] = r;
+    }
+  }
+  return {config:Object.assign(clone(S.config), {seedImported:seed.version || 'v1'}), records};
+}
+
+/* ---- storage adapters ---- */
+function makeLocalStore(){
+  const KEY = 'anzen-tenken-local-v2';
+  let cb, mem = null;
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e){ return {}; } };
+  const save = (d) => { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch(e){} };
+  const get = () => mem || (mem = load());
+  function emit(){
+    const d = get(); const recs = {};
+    for (const k in (d.records || {})) if (d.records[k].year === S.year) recs[k] = d.records[k];
+    S.seedVersion = window.ANZEN_SEED ? window.ANZEN_SEED.version : '';
+    cb.config(d.config || null); cb.records(recs);
+  }
+  return {
+    mode: 'local',
+    start(c){ cb = c; emit(); window.addEventListener('storage', e => { if (e.key === KEY){ mem = null; emit(); } }); },
+    resubscribe(){ emit(); },
+    async patchRecord(key, patch){ const d = get(); d.records = d.records || {}; d.records[key] = deepMerge(d.records[key] || {}, patch); save(d); cb.one(key, d.records[key]); },
+    async saveConfig(cfg){ const d = get(); d.config = cfg; save(d); cb.config(cfg); },
+    async getSeed(){ return window.ANZEN_SEED || null; },
+    async setTeamOrder(tid, places){ const d = get(); const cfg = d.config && d.config.teams ? d.config : clone(S.config); const tm = cfg.teams.find(x => x.id === tid); if (!tm) throw new Error('班が見つかりません'); tm.places = places; d.config = cfg; save(d); cb.config(cfg); },
+    async importRecords(data){
+      const d = get(); d.records = d.records || {}; let added = 0, skipped = 0;
+      for (const k in data.records){
+        const ex = d.records[k];
+        if (ex && !(ex.source && (!ex.seededAt || ex.updatedAt === ex.seededAt))){ skipped++; continue; }
+        d.records[k] = data.records[k]; added++;
+      }
+      d.config = data.config; save(d); emit();
+      return {added, skipped};
+    }
+  };
+}
+/* 記録の保存先（スプレッドシートの Apps Script の URL）。画面を別の場所に置くときに使う */
+const API_URL = 'https://script.google.com/macros/s/AKfycbzfBjRISrJKN0sTe-An1hSOjWMbr3lhiR8m5L0nEKa9cioA5nsu2nzdERIBgjFdMCAUzg/exec';
+const hasGoogleRun = () => !!(window.google && google.script && google.script.run);
+function gasCall(fn){
+  const args = [].slice.call(arguments, 1);
+  if (!hasGoogleRun()) return apiCall(fn, args);
+  return new Promise((res, rej) => { const r = google.script.run.withSuccessHandler(res).withFailureHandler(rej); r[fn].apply(r, args); });
+}
+/* Google のログイン情報（Cookie）を送らずに読み書きする → ブラウザのアカウントの状態に左右されない */
+async function apiCall(fn, args){
+  const r = await fetch(API_URL, {method:'POST', body:JSON.stringify({fn, args}), headers:{'Content-Type':'text/plain;charset=utf-8'}, credentials:'omit', redirect:'follow'});
+  if (!r.ok) throw new Error('通信エラー ' + r.status);
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error);
+  return j.data;
+}
+function makeGasStore(){
+  let cb, lastWrite = 0, rev = '';
+  async function pull(force){
+    const started = Date.now();
+    try {
+      const d = JSON.parse(await gasCall('getAll', S.year, force ? '' : rev));
+      if (d.unchanged){ cb.ok(); return; }
+      if (started < lastWrite) return;
+      rev = d.rev; S.seedVersion = d.seedVersion || '';
+      cb.config(d.config); cb.records(d.records || {});
+    } catch(e){ cb.error(); }
+  }
+  return {
+    mode: 'gas',
+    async start(c){
+      cb = c; await pull(true);
+      setInterval(() => { if (!document.hidden) pull(); }, 15000);
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) pull(); });
+    },
+    resubscribe(){ return pull(true); },
+    async patchRecord(key, patch){
+      const r = JSON.parse(await gasCall('patchRecord', key, JSON.stringify(patch)));
+      lastWrite = Date.now(); cb.one(key, r);
+    },
+    async saveConfig(cfg){ await gasCall('saveConfig', JSON.stringify(cfg)); lastWrite = Date.now(); cb.config(cfg); },
+    async getSeed(){ return JSON.parse(await gasCall('getSeed')); },
+    async setTeamOrder(tid, places){ const cfg = JSON.parse(await gasCall('setTeamOrder', tid, JSON.stringify(places), JSON.stringify(S.config))); lastWrite = Date.now(); cb.config(cfg); },
+    async importRecords(data){ const r = JSON.parse(await gasCall('importRecords', JSON.stringify(data))); lastWrite = 0; await pull(true); return r; }
+  };
+}
+
+/* ---- write queue（まとめて保存・失敗したら再送） ---- */
+let store = null;
+const Q = {};
+function recompute(){
+  const r = {};
+  for (const k in S.server) r[k] = S.server[k];
+  for (const k in Q){
+    const q = Q[k];
+    if (q.inflight) r[k] = deepMerge(r[k] || {}, q.inflight);
+    if (Object.keys(q.patch).length) r[k] = deepMerge(r[k] || {}, q.patch);
+  }
+  S.records = r;
+}
+function pendingCount(){ let n = 0; for (const k in Q) if (Q[k].busy || Object.keys(Q[k].patch).length) n++; return n; }
+/* 回議の所見・指示（紙に手書きされたものを係が入力する。月ごとに1件） */
+const reportKey = (period) => 'r' + S.year + '__report_' + period;
+function getShoken(period){ const r = S.records[reportKey(period)]; return r ? (r.memo || '') : ''; }
+function patchShoken(period, text){
+  if (!S.loaded || !store) return;
+  const key = reportKey(period), per = PERIOD_BY_ID[period];
+  const p = {year:S.year, placeId:'_report', period, placeName:'【所見・指示】', periodLabel:per.label, kind:'report', memo:text, updatedAt:new Date().toISOString()};
+  const q = Q[key] || (Q[key] = {patch:{}, timer:null, busy:false, inflight:null});
+  q.patch = deepMerge(q.patch, p);
+  clearTimeout(q.timer);
+  q.timer = setTimeout(() => flush(key), 600);
+  recompute(); setSync('saving');
+}function patchRecord(placeId, period, p){
+  if (!S.loaded || !store) return;
+  const key = recKey(placeId, period);
+  const place = placeById(placeId), per = PERIOD_BY_ID[period];
+  let base = {};
+  if (!S.records[key]){
+    const tid = defaultTeamFor(placeId), t = teamById(tid);
+    base = {year:S.year, placeId, period, placeName:place ? place.name : placeId, periodLabel:per ? per.label : period,
+            date:todayISO(), team:tid, teamName:t ? t.name : ''};
+  }
+  p = deepMerge(base, p);
+  p.updatedAt = new Date().toISOString();
+  if (place){
+    const merged = deepMerge(S.records[key] || {}, p);
+    const s = summarize(place, period, merged);
+    p.counts = {ok:s.ok, minor:s.minor, major:s.major, open:s.open};
+    p.summaryLines = issueLines(place, period, merged).join('\n');
+    p.placeName = place.name;
+  }
+  const q = Q[key] || (Q[key] = {patch:{}, timer:null, busy:false, inflight:null});
+  q.patch = deepMerge(q.patch, p);
+  clearTimeout(q.timer);
+  q.timer = setTimeout(() => flush(key), 450);
+  recompute();
+  setSync('saving');
+}
+async function flush(key){
+  const q = Q[key];
+  if (!q || q.busy || !Object.keys(q.patch).length) return;
+  const p = q.patch; q.patch = {}; q.busy = true; q.inflight = p;
+  try {
+    await store.patchRecord(key, p);
+    q.busy = false; q.inflight = null;
+    if (Object.keys(q.patch).length) flush(key);
+    else { delete Q[key]; recompute(); if (!pendingCount()) setSync('saved'); }
+  } catch(e){
+    q.busy = false; q.inflight = null;
+    q.patch = deepMerge(p, q.patch);
+    setSync('error');
+    q.timer = setTimeout(() => flush(key), 5000);
+  }
+}
+window.addEventListener('beforeunload', e => { if (pendingCount() || settingsDirty()){ e.preventDefault(); e.returnValue = ''; } });
+
+function setSync(s){
+  S.sync = s;
+  const el = $('#sync');
+  const txt = {loading:'読み込み中…', saving:'保存中…', saved:S.mode === 'local' ? '保存済み（この端末のみ）' : '保存済み', error:'未保存・再送中'}[s] || '';
+  el.className = 'sync ' + s;
+  el.querySelector('span').textContent = txt;
+}
+
+/* ---- toast ---- */
+let toastTimer;
+function showToast(msg, btnLabel, onBtn){
+  const t = $('#toast'), b = $('#toast-btn');
+  $('#toast-msg').textContent = msg;
+  b.hidden = !btnLabel; b.textContent = btnLabel || '';
+  b.onclick = () => { t.hidden = true; if (onBtn) onBtn(); };
+  t.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.hidden = true; }, btnLabel ? 7000 : 3000);
+}
+
+/* ---- render ---- */
+function render(force){
+  const ae = document.activeElement;
+  if (!force && ae && ae.closest && ae.closest('#view') && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)){ S.dirty = true; return; }
+  S.dirty = false;
+  if (S.team && !currentTeam()) S.team = '';
+  $('#yr').textContent = '令和' + S.year + '年度';
+  for (const t of ['check','report','settings','help']) $('#tab-' + t).setAttribute('aria-selected', String(S.tab === t));
+  renderPeriods();
+  const v = $('#view');
+  if (S.tab === 'check') v.innerHTML = S.placeId ? viewPlace() : viewList();
+  else if (S.tab === 'report') v.innerHTML = viewReport();
+  else if (S.tab === 'help') v.innerHTML = viewHelp();
+  else { v.innerHTML = viewSettings(); updateSaveBar(); }
+  const st = $('.stepper'), cur = st && st.querySelector('.on');
+  if (cur) st.scrollLeft = cur.offsetLeft - st.clientWidth / 2 + cur.offsetWidth / 2;
+}
+document.addEventListener('focusout', () => { setTimeout(() => { if (S.dirty) render(); }, 0); });
+
+function periodProgress(pid){
+  const list = placesFor(S.tab === 'check' ? routePlaces() : S.places, pid);
+  let done = 0, any = 0;
+  for (const p of list){ const s = summarize(p, pid); if (s.state === 'done') done++; if (s.marked) any++; }
+  return {done, any, total:list.length, state: done === list.length && done ? 'done' : any ? 'part' : 'none'};
+}
+function renderPeriods(){
+  const el = $('#periods');
+  el.hidden = S.tab === 'settings' || S.tab === 'help';
+  if (el.hidden) return;
+  const now = defaultPeriod();
+  el.innerHTML = PERIODS.map(p => {
+    const pr = periodProgress(p.id);
+    const sub = pr.state === 'done' ? '✓完了' : pr.state === 'part' ? `${pr.done}/${pr.total}` : '';
+    const lab = pr.state === 'part' ? `（点検途中：${pr.done}/${pr.total}か所完了）` : pr.state === 'done' ? '（完了）' : '';
+    return `<button class="pchip st-${pr.state}${p.id === now ? ' now' : ''}" data-act="period" data-period="${p.id}" aria-pressed="${p.id === S.period}" aria-label="${h(p.label + lab)}"><span>${h(p.label)}</span><small class="num">${sub}</small></button>`;
+  }).join('');
+}
+
+function statusPill(s){
+  if (s.state === 'none') return '<span class="pill">未点検</span>';
+  const bits = [];
+  if (s.state === 'partial') bits.push(`<span class="pill prog num">点検途中 ${s.marked}/${s.total}</span>`);
+  if (s.major) bits.push(`<span class="pill major num">× ${s.major}</span>`);
+  if (s.minor) bits.push(`<span class="pill minor num">△ ${s.minor}</span>`);
+  if (s.state === 'done' && !s.major && !s.minor) bits.push('<span class="pill ok">✓ 異常なし</span>');
+  else if (s.state === 'done') bits.unshift('<span class="pill ok">完了</span>');
+  return '<span class="pill-set">' + bits.join('') + '</span>';
+}
+function movedBanner(){
+  const to = S.config.moveTo;
+  if (!to || !/^https?:\/\//.test(to)) return '';
+  const here = location.href.split('#')[0].replace(/index\.html$/, '');
+  const dest = to.split('#')[0].replace(/index\.html$/, '');
+  if (here === dest || location.protocol === 'file:' || location.protocol === 'data:') return '';
+  return `<div class="banner part">この画面の住所は変わりました。これからは新しい住所を開いてください（記録はそのまま引き継がれています）。<br><a href="${h(to)}" style="color:var(--accent);font-weight:700;word-break:break-all">${h(to)}</a></div>`;
+}function topBanner(){
+  if (!S.loaded && S.loadFailed) return '<div class="banner warn"><b>データを読み込めません。</b> 通信状態を確認して、ページを開き直してください。</div>';
+  if (S.loaded && movedBanner()) return movedBanner();
+  if (!S.loaded) return '<div class="banner">データを読み込んでいます。読み込みが終わるまで入力はできません。</div>';
+  const seed = seedReady() && S.tab !== 'settings' ? '<div class="banner">紙に記録した4月〜9月の結果を取り込めます。「設定」→「その他」の「紙の記録を取り込む」を押してください。</div>' : '';
+  if (S.mode === 'local') return seed + '<div class="banner warn">試し用の表示です。記録はこの端末にだけ保存され、ほかの端末とは共有されません。</div>';
+  return seed;
+}
+function seedReady(){ return S.loaded && !!S.seedVersion && S.config.seedImported !== S.seedVersion; }
+
+/* ---- 点検する ---- */
+function viewList(){
+  const per = PERIOD_BY_ID[S.period];
+  const teams = S.config.teams;
+  const t = currentTeam();
+  const route = placesFor(routePlaces(), S.period);
+  const sums = route.map((p, i) => ({p, i, s:summarize(p, S.period)}));
+  const done = sums.filter(x => x.s.state === 'done').length;
+  const partial = sums.filter(x => x.s.state === 'partial').length;
+  const shown = S.filter === 'todo' ? sums.filter(x => x.s.state !== 'done') : sums;
+  const pct = Math.round(done / Math.max(1, sums.length) * 100);
+  const nextTodo = sums.find(x => x.s.state === 'partial') || sums.find(x => x.s.state !== 'done');
+
+  const picker = teams.length
+    ? `<div class="lbl" style="margin-bottom:6px">この端末で点検する班</div>
+       <div class="teampick" role="group" aria-label="班を選ぶ">
+        ${teams.map(x => `<button class="tchip" data-act="team" data-team="${h(x.id)}" aria-pressed="${S.team === x.id}">${h(x.name || '（名前なし）')}</button>`).join('')}
+        <button class="tchip" data-act="team" data-team="" aria-pressed="${!S.team}">すべての場所</button>
+       </div>`
+    : `<div class="banner">「設定」タブで班と担当箇所を登録すると、班を選ぶだけで担当の場所が回る順に並びます。</div>`;
+
+  const partBanner = (done < sums.length && (done || partial)) ? `<div class="banner part">${h(per.label)}の点検は途中です。残り ${sums.length - done} か所${partial ? `（うち ${partial} か所は入力の途中）` : ''}</div>` : '';
+  const head = t
+    ? `<div class="teamhead">
+        <div><h2>${h(t.name)}　${h(per.label)}の点検</h2>${t.members ? `<div class="mem">${h(t.members)}</div>` : ''}
+          <div class="num" style="margin-top:4px">担当 ${sums.length}か所のうち <b>${done}</b>か所 完了</div></div>
+        ${nextTodo ? `<button class="btn primary go" data-act="open" data-place="${h(nextTodo.p.id)}">${done || partial ? '続きから点検する' : '点検を始める'} →</button>` : '<span class="pill ok">担当の場所はすべて完了</span>'}
+        <div class="progress" aria-hidden="true"><i style="width:${pct}%"></i></div>
+        <div style="grid-column:1/-1"><button class="btn small" data-act="reorder"${S.loaded ? '' : ' disabled'}>回る順を変える</button></div>
+      </div>`
+    : `<div class="sec-h"><h2>${h(per.label)}の点検（すべての場所）</h2></div>
+       <div class="summary-line"><span class="num"><b>${done}</b> / ${sums.length} か所 完了</span><div class="progress" aria-hidden="true"><i style="width:${pct}%"></i></div></div>`;
+
+  if (t && S.reorder) return `${topBanner()}${picker}${viewReorder(t)}`;
+  return `${topBanner()}${picker}${partBanner}${head}
+  <div class="sec-h" style="margin-top:4px"><span class="muted" style="font-size:14px">${t ? '回る順' : '点検表の番号順'}</span>
+    <div class="seg" role="group" aria-label="表示">
+      <button data-act="filter" data-filter="all" aria-pressed="${S.filter === 'all'}">すべて</button>
+      <button data-act="filter" data-filter="todo" aria-pressed="${S.filter === 'todo'}">未完了だけ</button>
+    </div>
+  </div>
+  ${!sums.length ? '<div class="empty">この班にはまだ担当箇所が登録されていません。「設定」タブで追加してください。</div>'
+   : shown.length ? `<div class="plist">${shown.map(({p, i, s}) => {
+    const w = s.total ? Math.round(s.marked / s.total * 100) : 0;
+    const meta = [t ? '点検表 ' + p.n : teamsOfPlace(p.id).map(x => x.name).join('・'), s.r ? fmtDate(s.r.date) : ''].filter(Boolean).join(' · ');
+    return `<button class="pcard st-${s.state}" data-act="open" data-place="${h(p.id)}">
+      <span class="pnum${t ? ' step' : ''}">${t ? i + 1 : h(p.n)}</span><span class="pname">${h(p.name)}</span>
+      <span class="pstat">${statusPill(s)}</span>
+      <span class="pmeta">${h(meta)}</span>
+      <span class="pbar"><i style="width:${w}%"></i></span></button>`;
+  }).join('')}</div>` : '<div class="empty">この月はすべての場所の点検が完了しています。</div>'}`;
+}
+
+/* 各班が自分で回る順を並べ替える（その班の順番だけを保存する） */
+function viewReorder(t){
+  const list = S.reorder.map(placeById).filter(Boolean);
+  return `<div class="teamhead"><div><h2>${h(t.name)}　回る順を変える</h2>
+      <div class="mem">↑ ↓ で並べ替えて、「この順で保存」を押します。保存すると、この班の全員の画面に反映されます。</div></div></div>
+    <ol class="route">${list.map((p, i) => `<li><b class="num">${i + 1}</b><span>${h(p.name)}</span>
+      <button class="btn small" data-act="ro-move" data-i="${i}" data-d="-1" aria-label="${h(p.name)}を上へ"${i === 0 ? ' disabled' : ''}>↑</button>
+      <button class="btn small" data-act="ro-move" data-i="${i}" data-d="1" aria-label="${h(p.name)}を下へ"${i === list.length - 1 ? ' disabled' : ''}>↓</button></li>`).join('')}</ol>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+      <button class="btn primary" data-act="ro-save"${S.reorderBusy ? ' disabled' : ''}>${S.reorderBusy ? '保存中…' : 'この順で保存'}</button>
+      <button class="btn" data-act="ro-cancel">やめる</button>
+    </div>`;
+}
+function methodTags(it){ return it.methods.length ? `<div class="meth">${it.methods.map(m => `<span>${h(m)}</span>`).join('')}</div>` : ''; }
+function hasPhrase(note, ph){ return String(note || '').split('、').map(s => s.trim()).includes(ph); }
+function chipsHTML(target, note, extra){
+  const P = S.config.phrases;
+  const freq = frequentPhrases();
+  const mk = (ph) => `<button class="chip${hasPhrase(note, ph) ? ' on' : ''}" data-act="chip" data-target="${h(target)}" data-text="${h(ph)}">${h(ph)}</button>`;
+  return `${extra || ''}
+    <div class="chips"><span class="lbl">状態</span>${P.state.map(mk).join('')}</div>
+    <div class="chips"><span class="lbl">対応</span>${P.action.map(mk).join('')}</div>
+    ${freq.length ? `<div class="chips"><span class="lbl">よく使う</span>${freq.map(mk).join('')}</div>` : ''}`;
+}
+function navList(placeId){ const route = routePlaces(); return route.some(p => p.id === placeId) ? route : S.places; }
+
+function viewPlace(){
+  const place = placeById(S.placeId);
+  if (!place){ S.placeId = null; return viewList(); }
+  const per = PERIOD_BY_ID[S.period];
+  const r = S.records[recKey(place.id, S.period)] || {};
+  const marks = r.marks || {}, notes = r.notes || {}, status = r.status || {};
+  const sum = summarize(place, S.period);
+  const unmarked = place.items.filter(it => itemApplies(it, S.period, r) && !marks[it.id]).length;
+  const prev = prevRecord(place.id, S.period);
+  const pm = prev ? (prev.r.marks || {}) : {}, pn = prev ? (prev.r.notes || {}) : {};
+  const dis = !S.loaded ? ' disabled' : '';
+  const t = currentTeam();
+  const nav = navList(place.id);
+  const idx = nav.findIndex(p => p.id === place.id);
+  const prevP = idx > 0 ? nav[idx - 1] : null, nextP = idx < nav.length - 1 ? nav[idx + 1] : null;
+  const teamSel = r.team != null ? r.team : defaultTeamFor(place.id);
+
+  const stepper = (t && nav !== S.places) ? `<nav class="stepper noprint" aria-label="${h(t.name)}の担当箇所">${nav.map((p, i) => {
+      const s = summarize(p, S.period);
+      return `<button class="step st-${s.state}${s.state === 'done' && (s.major || s.minor) ? ' has-bad' : ''}${p.id === place.id ? ' on' : ''}" data-act="open" data-place="${h(p.id)}" aria-current="${p.id === place.id ? 'step' : 'false'}"><b>${s.state === 'done' ? (s.major || s.minor ? '!' : '✓') : i + 1}</b><span>${h(p.name)}</span></button>`;
+    }).join('')}</nav>` : '';
+
+  const groups = [...new Set(place.items.map(it => it.group).filter(Boolean))];
+  const gjump = groups.length > 1 ? `<div class="gjump noprint"><span class="lbl">区分へ移動</span>${groups.map((g, i) => `<button class="chip" data-act="gjump" data-g="${i}">${h(g)}</button>`).join('')}</div>` : '';
+
+  let lastGroup = null;
+  const rows = place.items.map(it => {
+    let g = '';
+    if (it.group !== lastGroup){ if (it.group) g = `<div class="grp" id="grp-${groups.indexOf(it.group)}">${h(it.group)}</div>`; lastGroup = it.group; }
+    if (!itemApplies(it, S.period, r)){
+      return `${g}<div class="item na"><div class="ino num">${h(it.no)}</div><div><div class="itxt">${h(it.text)}</div>${methodTags(it)}</div><div class="na-tag">${inPeriod(it, S.period) ? '対象外（' + h(monthsText(it.months)) + 'に点検）' : '対象外（追加前）'}</div></div>`;
+    }
+    const m = marks[it.id] || '';
+    const bad = m === 'minor' || m === 'major';
+    const pmk = pm[it.id];
+    const prevLine = (pmk === 'minor' || pmk === 'major')
+      ? `<div class="prev">前回（${h(prev.period.label)}）<b class="${pmk}">${MARK[pmk].sym}</b> ${h(pn[it.id] || '記入なし')}</div>` : '';
+    const btns = ['ok','minor','major'].map(k =>
+      `<button class="mk ${k}${m === k ? ' on' : ''}" data-act="mark" data-item="${h(it.id)}" data-mark="${k}" aria-pressed="${m === k}" aria-label="No.${h(it.no)} ${MARK[k].label}"${dis}>${MARK[k].sym}</button>`).join('');
+    let detail = '';
+    if (bad){
+      const st = status[it.id] === 'done' ? 'done' : 'open';
+      const prevChip = (pn[it.id] && pn[it.id] !== notes[it.id]) ? `<div class="chips"><span class="lbl">前回</span><button class="chip prevc" data-act="copyprev" data-item="${h(it.id)}">前回と同じ内容「${h(pn[it.id])}」</button></div>` : '';
+      detail = `<div class="detail">
+        ${chipsHTML('n:' + it.id, notes[it.id], prevChip)}
+        <div class="drow">
+          <input class="input" type="text" enterkeyhint="done" placeholder="不良の内容（上のボタンで入力できます）" aria-label="No.${h(it.no)} の内容" data-field="note" data-item="${h(it.id)}" value="${h(notes[it.id] || '')}"${dis}>
+          <div class="seg" role="group" aria-label="対応状況">
+            <button data-act="status" data-item="${h(it.id)}" data-val="open" aria-pressed="${st === 'open'}"${dis}>未対応</button>
+            <button data-act="status" data-item="${h(it.id)}" data-val="done" aria-pressed="${st === 'done'}"${dis}>対応済</button>
+          </div>
+        </div></div>`;
+    }
+    return `${g}<div class="item s-${m || 'none'}" id="item-${h(it.id)}">
+      <div class="ino num">${h(it.no)}</div>
+      <div><div class="itxt">${h(it.text)}</div>${methodTags(it)}${prevLine}</div>
+      <div class="marks" role="group" aria-label="判定">${btns}</div>${detail}</div>`;
+  }).join('');
+
+  return `${topBanner()}
+  <div class="noprint" style="margin:-6px 0 8px"><button class="btn ghost" data-act="back">← ${t ? h(t.name) + 'の担当一覧' : '場所の一覧'}</button></div>
+  ${stepper}
+  <div class="phead">
+    <div><div class="when">点検表 ${h(place.n)}　${h(per.label)}の点検${per.tmp ? '（臨時点検）' : '（定期点検）'}${t && nav !== S.places ? `　${idx + 1} / ${nav.length} か所目` : ''}</div><h2>${h(place.name)}</h2></div>
+    <div>${statusPill(sum)}</div>
+  </div>
+  <div class="meta-grid">
+    <div class="field"><label for="f-date">点検日</label><input class="input" id="f-date" type="date" data-field="date" value="${h(r.date || todayISO())}"${dis}></div>
+    <div class="field"><label for="f-team">点検班</label><select class="input" id="f-team" data-field="team"${dis}>
+      <option value=""${!teamSel ? ' selected' : ''}>（班を選ぶ）</option>
+      ${S.config.teams.map(x => `<option value="${h(x.id)}"${x.id === teamSel ? ' selected' : ''}>${h(x.name)}</option>`).join('')}
+      ${r.team && !teamById(r.team) && r.teamName ? `<option value="${h(r.team)}" selected>${h(r.teamName)}</option>` : ''}
+    </select></div>
+  </div>
+  <button class="allok noprint" data-act="allok"${unmarked && !dis ? '' : ' disabled'}>
+    ${unmarked ? `<span class="sym">✓</span> 残り${unmarked}項目をすべて「異常なし」にする` : '全項目の入力が済んでいます'}
+  </button>
+  <div class="legend"><span><b class="s-ok">✓</b> 異常なし</span><span><b class="s-minor">△</b> 異常あり（軽度）</span><span><b class="s-major">×</b> 異常あり（修理・交換）</span><span>点検方法：目視・打音・振動・負荷・作動</span></div>
+  ${gjump}
+  <div class="items">${rows}</div>
+
+  <section class="memo">
+    <h3>※ 上記の点検項目以外で気付いたこと</h3>
+    <div class="muted" style="font-size:13.5px;margin-bottom:8px">点検項目にない不具合や、気付いたことがあれば記入します。△・× を付けた項目の内容は、各項目の欄に入力してください。</div>
+    ${prev && prev.r.memo && prev.r.memo !== r.memo ? `<div class="chips" style="margin:0 0 8px"><span class="lbl">前回</span><button class="chip prevc" data-act="copymemo">前回（${h(prev.period.label)}）の内容を引き継ぐ</button></div>` : ''}
+    <textarea class="input" id="f-memo" data-field="memo" placeholder="なければ空欄のままで大丈夫です"${dis}>${h(r.memo || '')}</textarea>
+  </section>
+
+  <div class="foot-nav noprint">
+    ${prevP ? `<button class="btn" data-act="open" data-place="${h(prevP.id)}">← 前：${h(prevP.name)}</button>` : '<span></span>'}
+    ${nextP ? `<button class="btn primary" data-act="open" data-place="${h(nextP.id)}">次：${h(nextP.name)} →</button>` : `<button class="btn primary" data-act="back">${t ? '担当の場所はここまで・一覧へ' : '一覧へ戻る'}</button>`}
+  </div>
+  <div class="noprint" style="margin-top:14px"><button class="btn" data-act="annual">${S.annual ? '年間の記録を閉じる' : 'この場所の年間の記録を見る'}</button></div>
+  ${S.annual ? annualTable(place) : ''}`;
+}
+function annualTable(place){
+  const recs = PERIODS.map(p => S.records[recKey(place.id, p.id)] || null);
+  const head = PERIODS.map(p => `<th class="num">${h(p.label)}</th>`).join('');
+  const body = place.items.map(it => `<tr><td class="lft num">${h(it.no)}</td><td class="txt">${h(it.text)}</td>${
+    recs.map((r, i) => {
+      const cur = PERIODS[i].id === S.period ? ' cur' : '';
+      if (!itemApplies(it, PERIODS[i].id, r)) return `<td><span class="cell na${cur}">－</span></td>`;
+      const m = r && r.marks && r.marks[it.id];
+      return `<td><span class="cell ${m || 'none'}${cur}">${m ? MARK[m].sym : '・'}</span></td>`;
+    }).join('')}</tr>`).join('');
+  const foot = `<tr><td class="lft"></td><td class="txt muted">点検日</td>${recs.map(r => `<td class="num muted">${h(r ? fmtDate(r.date) : '')}</td>`).join('')}</tr>
+    <tr><td class="lft"></td><td class="txt muted">点検班</td>${recs.map(r => `<td class="muted" style="white-space:normal;font-size:12px">${h(teamLabel(r))}</td>`).join('')}</tr>`;
+  return `<h3 class="sub">年間の記録　${h(place.name)}</h3>
+    <div class="tablewrap"><table class="grid"><thead><tr><th class="lft">No.</th><th class="txt">点検項目</th>${head}</tr></thead><tbody>${body}${foot}</tbody></table></div>`;
+}
+
+/* ---- 報告・確認 ---- */
+function collectIssues(period){
+  const list = [];
+  for (const p of S.places){
+    const r = S.records[recKey(p.id, period)];
+    if (!r || !r.marks) continue;
+    for (const it of p.items){
+      if (!itemApplies(it, period, r)) continue;
+      const m = r.marks[it.id];
+      if (m === 'minor' || m === 'major') list.push({place:p, period, it, mark:m, note:(r.notes || {})[it.id] || '', done:(r.status || {})[it.id] === 'done', r});
+    }
+  }
+  return list;
+}
+/* 以前の点検で未対応：その項目の一番新しい記録が △・× で未対応のものだけ（毎月の重複を出さない） */
+function latestPeriodOf(placeId, itemId){
+  for (let i = PERIODS.length - 1; i >= 0; i--){
+    const r = S.records[recKey(placeId, PERIODS[i].id)];
+    if (r && r.marks && r.marks[itemId]) return PERIODS[i].id;
+  }
+  return null;
+}
+function openElsewhere(period){
+  const out = [];
+  for (const per of PERIODS){
+    if (per.id === period) continue;
+    for (const x of collectIssues(per.id)){
+      if (x.done) continue;
+      const cur = S.records[recKey(x.place.id, period)];
+      if (cur && cur.marks && cur.marks[x.it.id]) continue;
+      if (latestPeriodOf(x.place.id, x.it.id) === per.id) out.push(x);
+    }
+  }
+  return out;
+}
+function whoLine(r){ return [teamLabel(r), fmtDate(r.date)].filter(Boolean).join('　'); }
+function issueCard(x, showPeriod){
+  const dis = !S.loaded ? ' disabled' : '';
+  return `<div class="issue">
+    <div class="sev ${x.mark}" aria-label="${MARK[x.mark].label}">${MARK[x.mark].sym}</div>
+    <div>
+      <div class="where"><button data-act="goto" data-place="${h(x.place.id)}" data-period="${x.period}">${h(x.place.name)}</button>${showPeriod ? `　<span class="muted" style="font-weight:400">${h(PERIOD_BY_ID[x.period].label)}</span>` : ''}</div>
+      <div class="what">No.${h(x.it.no)}　${h(x.it.text)}</div>
+      <div class="note">${x.note ? h(x.note) : '<span class="muted">（内容未記入）</span>'}</div>
+      <div class="who">${h(whoLine(x.r))}</div>
+    </div>
+    <div class="seg" role="group" aria-label="対応状況">
+      <button data-act="rstatus" data-place="${h(x.place.id)}" data-period="${x.period}" data-item="${h(x.it.id)}" data-val="open" aria-pressed="${!x.done}"${dis}>未対応</button>
+      <button data-act="rstatus" data-place="${h(x.place.id)}" data-period="${x.period}" data-item="${h(x.it.id)}" data-val="done" aria-pressed="${x.done}"${dis}>対応済</button>
+    </div></div>`;
+}
+function teamProgress(period){
+  return S.config.teams.map(t => {
+    const ps = placesFor(teamPlaces(t), period).map(p => ({p, s:summarize(p, period)}));
+    return {t, ps, done:ps.filter(x => x.s.state === 'done').length,
+      major:ps.reduce((a, x) => a + x.s.major, 0), minor:ps.reduce((a, x) => a + x.s.minor, 0),
+      left:ps.filter(x => x.s.state !== 'done')};
+  });
+}
+function unassignedPlaces(){ const set = new Set(S.config.teams.flatMap(t => t.places)); return S.places.filter(p => !set.has(p.id)); }
+function reportData(period){
+  const sums = placesFor(S.places, period).map(p => ({p, s:summarize(p, period)}));
+  const issues = collectIssues(period);
+  const dates = sums.map(x => x.s.r && x.s.r.date).filter(Boolean).sort();
+  return {
+    per: PERIOD_BY_ID[period], sums, done: sums.filter(x => x.s.state === 'done').length,
+    maj: issues.filter(x => x.mark === 'major'), min: issues.filter(x => x.mark === 'minor'),
+    open: issues.filter(x => !x.done).length, others: openElsewhere(period),
+    memos: sums.filter(x => x.s.r && x.s.r.memo && x.s.r.memo.trim()),
+    notDone: sums.filter(x => x.s.state !== 'done'), tp: teamProgress(period),
+    from: dates[0], to: dates[dates.length - 1]
+  };
+}
+function viewReport(){
+  const d = reportData(S.period);
+  const toggle = `<div class="sec-h noprint"><h2>${h(d.per.label)}の点検結果</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <div class="seg" role="group" aria-label="表示の切り替え">
+        <button data-act="rview" data-v="screen" aria-pressed="${S.reportView === 'screen'}">画面で確認</button>
+        <button data-act="rview" data-v="a4" aria-pressed="${S.reportView === 'a4'}">報告書（A4）</button>
+      </div>
+      ${S.reportView === 'a4' ? '<button class="btn primary" data-act="print">印刷する</button>' : ''}
+    </div></div>`;
+  if (S.reportView === 'a4') return `${topBanner()}${toggle}<p class="muted noprint" style="font-size:13.5px;margin-top:-4px">印刷の画面で用紙を「A4・縦」にしてください。</p><div class="a4wrap">${reportA4(d)}</div>`;
+
+  const gridHead = PERIODS.map(p => `<th class="num">${h(p.label)}</th>`).join('');
+  const gridBody = S.places.map(p => `<tr><td class="lft" style="white-space:normal;min-width:11em;text-align:left">${h(p.n)}．${h(p.name)}</td>${
+    PERIODS.map(pe => {
+      if (!inPeriod(p, pe.id)) return '<td><span class="cell na">－</span></td>';
+      const s = summarize(p, pe.id);
+      let cls = 'none', sym = '・', label = '未点検';
+      if (s.state === 'partial'){ cls = 'partial'; sym = s.marked + '/' + s.total; label = '点検途中'; }
+      else if (s.major){ cls = 'major'; sym = '×' + (s.major > 1 ? s.major : ''); label = '×あり'; }
+      else if (s.minor){ cls = 'minor'; sym = '△' + (s.minor > 1 ? s.minor : ''); label = '△あり'; }
+      else if (s.state === 'done'){ cls = 'ok'; sym = '✓'; label = '異常なし'; }
+      return `<td><button class="cell ${cls}${pe.id === S.period ? ' cur' : ''}" data-act="goto" data-place="${h(p.id)}" data-period="${pe.id}" aria-label="${h(p.name)} ${h(pe.label)} ${label}">${sym}</button></td>`;
+    }).join('')}</tr>`).join('');
+
+  return `${topBanner()}${toggle}
+  <div class="stats">
+    <div class="stat ok"><div class="k">点検完了</div><div class="v num">${d.done}<small>/ ${d.sums.length}か所</small></div></div>
+    <div class="stat major"><div class="k">× 修理・交換</div><div class="v num">${d.maj.length}<small>件</small></div></div>
+    <div class="stat minor"><div class="k">△ 軽度</div><div class="v num">${d.min.length}<small>件</small></div></div>
+    <div class="stat"><div class="k">未対応</div><div class="v num">${d.open + d.others.length}<small>件${d.others.length ? '（以前分' + d.others.length + '含む）' : ''}</small></div></div>
+  </div>
+  ${d.tp.length ? `<h3 class="sub">班ごとの進み具合</h3><div class="teamrows">${d.tp.map(x => `<div class="teamrow${x.done < x.ps.length && x.left.some(y => y.s.state === 'partial' || x.done) ? ' part' : ''}">
+      <div class="tn">${h(x.t.name)}${x.t.members ? `<small>${h(x.t.members)}</small>` : ''}</div>
+      <div class="prog"><div class="num" style="font-size:14px;margin-bottom:4px"><b>${x.done}</b> / ${x.ps.length}か所 完了</div><div class="progress"><i style="width:${Math.round(x.done / Math.max(1, x.ps.length) * 100)}%"></i></div></div>
+      <div class="pill-set">${x.major ? `<span class="pill major num">× ${x.major}</span>` : ''}${x.minor ? `<span class="pill minor num">△ ${x.minor}</span>` : ''}${!x.major && !x.minor ? '<span class="pill">異常なし</span>' : ''}</div>
+      ${x.left.length && x.left.length < x.ps.length ? `<div class="left">${x.left.map(y => `<button class="chip" data-act="goto" data-place="${h(y.p.id)}" data-period="${S.period}">${h(y.p.name)}${y.s.state === 'partial' ? `（${y.s.marked}/${y.s.total}）` : ''}</button>`).join('')}</div>` : ''}
+    </div>`).join('')}</div>` : ''}
+  <h3 class="sub"><span class="sev major" style="width:26px;height:26px;font-size:15px">×</span>要修理・交換</h3>
+  ${d.maj.length ? `<div class="issues">${d.maj.map(x => issueCard(x)).join('')}</div>` : '<div class="empty">ありません</div>'}
+  <h3 class="sub"><span class="sev minor" style="width:26px;height:26px;font-size:15px">△</span>軽度の異常</h3>
+  ${d.min.length ? `<div class="issues">${d.min.map(x => issueCard(x)).join('')}</div>` : '<div class="empty">ありません</div>'}
+  <h3 class="sub">点検項目以外で気付いたこと</h3>
+  ${d.memos.length ? `<div class="issues">${d.memos.map(x => `<div class="issue" style="grid-template-columns:1fr"><div><div class="where"><button data-act="goto" data-place="${h(x.p.id)}" data-period="${S.period}">${h(x.p.name)}</button></div><div class="note" style="white-space:pre-line">${h(x.s.r.memo.trim())}</div><div class="who">${h(whoLine(x.s.r))}</div></div></div>`).join('')}</div>` : '<div class="empty">ありません</div>'}
+  ${d.others.length ? `<h3 class="sub">以前の点検で未対応のもの</h3><div class="issues">${d.others.map(x => issueCard(x, true)).join('')}</div>` : ''}
+  <h3 class="sub">所見・指示</h3>
+  <div class="memo" style="margin-top:0">
+    <div class="muted" style="font-size:13.5px;margin-bottom:8px">回議で管理職が報告書に書いた所見・指示を、安全点検係が入力します。入力した内容は報告書（A4）の「所見・指示」欄に印刷されます。</div>
+    <textarea class="input" id="f-shoken" data-field="shoken" rows="4" placeholder="例：3階東廊下の床の浮きは、業者に修理を依頼すること。（10/3 校長）"${S.loaded ? '' : ' disabled'}>${h(getShoken(S.period))}</textarea>
+  </div>  <h3 class="sub">年間の実施状況</h3>
+  <div class="legend" style="margin-top:0"><span><b class="s-ok">✓</b> 異常なし</span><span><b class="s-minor">△</b> 軽度あり</span><span><b class="s-major">×</b> 修理・交換あり</span><span><b>5/20</b> 点検途中（入力済み／項目数）</span><span><b>・</b> 未点検</span></div>
+  <div class="tablewrap"><table class="grid"><thead><tr><th class="lft" style="text-align:left">場所</th>${gridHead}</tr></thead><tbody>${gridBody}</tbody></table></div>`;
+}
+/* A4 報告書 */
+function reportA4(d){
+  const today = new Date();
+  const range = d.from ? (d.from === d.to ? fmtDate(d.from) : fmtDate(d.from) + '〜' + fmtDate(d.to)) : '―';
+  const issueRows = (list, showPer) => list.map(x => `<tr>
+      <td>${h(x.place.name)}${showPer ? `<br><span style="font-size:8pt">（${h(PERIOD_BY_ID[x.period].label)}）</span>` : ''}</td>
+      <td class="c num">${h(x.it.no)}</td><td>${h(x.it.text)}</td><td>${x.note ? h(x.note) : '（内容未記入）'}</td>
+      <td class="c">${x.done ? '対応済' : '未対応'}</td><td class="c" style="font-size:8pt">${h(teamLabel(x.r))}<br>${h(fmtDate(x.r.date))}</td></tr>`).join('');
+  const issueTable = (list, showPer) => list.length ? `<table class="a4t"><colgroup><col style="width:21%"><col style="width:5%"><col style="width:29%"><col style="width:27%"><col style="width:7%"><col style="width:11%"></colgroup>
+      <thead><tr><th>場所</th><th class="c">No.</th><th>点検項目</th><th>状況・内容</th><th class="c">対応</th><th class="c">班・日付</th></tr></thead><tbody>${issueRows(list, showPer)}</tbody></table>` : '<p class="none">ありません。</p>';
+  const un = placesFor(unassignedPlaces(), S.period).filter(p => summarize(p, S.period).state !== 'done');
+  let sec = 0; const H = (t) => `<h4>${++sec}．${t}</h4>`;
+  return `<article class="a4">
+    <div class="a4-head">
+      <div><div class="a4-title">令和${S.year}年度　安全点検報告書</div>
+        <div class="a4-sub">${h(d.per.label)}　${d.per.tmp ? '臨時点検' : '定期点検'}　／　点検日 ${h(range)}　／　作成日 ${today.getMonth() + 1}/${today.getDate()}</div></div>
+      <table class="stamp"><tr><th>校長</th><th>教頭</th><th>教務主任</th><th>文書事務<br>取扱主任</th><th>安全点検係</th></tr><tr><td></td><td></td><td></td><td></td><td></td></tr></table>
+    </div>
+    ${H('実施状況')}
+    <div class="kpi"><span>点検完了 <b>${d.done}</b> / ${d.sums.length} か所</span><span>× 修理・交換 <b>${d.maj.length}</b> 件</span><span>△ 軽度 <b>${d.min.length}</b> 件</span><span>未対応 <b>${d.open + d.others.length}</b> 件</span></div>
+    ${d.tp.length ? `<table class="a4t"><colgroup><col style="width:24%"><col style="width:9%"><col style="width:7%"><col style="width:7%"><col style="width:53%"></colgroup>
+      <thead><tr><th>班</th><th class="c">完了</th><th class="c">×</th><th class="c">△</th><th>未完了の場所</th></tr></thead><tbody>
+      ${d.tp.map(x => `<tr><td>${h(x.t.name)}</td><td class="c num">${x.done}/${x.ps.length}</td><td class="c num">${x.major || ''}</td><td class="c num">${x.minor || ''}</td><td>${x.left.length ? x.left.map(y => h(y.p.name) + (y.s.state === 'partial' ? '（途中）' : '')).join('、') : '―'}</td></tr>`).join('')}
+      ${un.length ? `<tr><td>班の割り当てなし</td><td class="c">―</td><td></td><td></td><td>${un.map(p => h(p.name)).join('、')}</td></tr>` : ''}
+      </tbody></table>` : (d.notDone.length ? `<p>未完了：${d.notDone.map(x => h(x.p.name)).join('、')}</p>` : '')}
+    ${H('要修理・交換（×）')}${issueTable(d.maj)}
+    ${H('軽度の異常（△）')}${issueTable(d.min)}
+    ${H('点検項目以外で気付いたこと')}
+    ${d.memos.length ? `<table class="a4t"><colgroup><col style="width:22%"><col style="width:64%"><col style="width:14%"></colgroup><thead><tr><th>場所</th><th>内容</th><th class="c">班・日付</th></tr></thead><tbody>
+      ${d.memos.map(x => `<tr><td>${h(x.p.name)}</td><td style="white-space:pre-line">${h(x.s.r.memo.trim())}</td><td class="c" style="font-size:8pt">${h(teamLabel(x.s.r))}<br>${h(fmtDate(x.s.r.date))}</td></tr>`).join('')}</tbody></table>` : '<p class="none">ありません。</p>'}
+    ${d.others.length ? H('以前の点検で見つかり、未対応のもの') + issueTable(d.others, true) : ''}
+    ${H('所見・指示')}${getShoken(S.period).trim() ? `<div class="memo-box" style="height:auto;min-height:26mm;padding:2mm 2.5mm;white-space:pre-line">${h(getShoken(S.period).trim())}</div>` : '<div class="memo-box"></div>'}
+  </article>`;
+}
+
+/* ---- 使い方（先生方向けマニュアル） ---- */
+function viewHelp(){
+  const S1 = [
+    ['start','はじめに', `<p>校内の安全点検を、紙の代わりにこの画面で記録します。パソコンでも iPad でも使え、同じ班の先生が別々の端末で同時に入力しても大丈夫です。入力は自動で保存されます（保存ボタンはありません）。</p>
+      <ul><li>右上に「保存済み」と出ていれば、記録はスプレッドシートに保存されています。</li>
+      <li>iPad では Safari の共有ボタンから「ホーム画面に追加」を選ぶと、アプリのように開けます。</li></ul>`],
+    ['check','点検のしかた', `<ol>
+      <li>「点検する」タブを開き、上の月のボタンで点検する月を選びます（今月が最初から選ばれています）。</li>
+      <li>自分の<b>班</b>のボタンを押します。この端末では次から自動で選ばれます。</li>
+      <li>担当の場所が回る順に並びます。「<b>点検を始める →</b>」を押します。回る順は、各班で変えられます（次の項目）。</li>
+      <li><b>回る順を変える</b>：班を選んだ画面の「<b>回る順を変える</b>」を押し、↑ ↓ で並べ替えて「この順で保存」を押します。その班の全員の画面に反映されます。</li>
+      <li>点検日と点検班は最初から入っています。違うときだけ直します。</li>
+      <li>異常がなければ「<b>残り○項目をすべて『異常なし』にする</b>」を1回押します。間違えたときは、画面下の「元に戻す」で取り消せます。</li>
+      <li>「<b>次：○○ →</b>」で次の場所へ進みます。上に並んだ場所のボタンから、好きな場所へ直接移ることもできます。</li></ol>`],
+    ['bad','異常があったとき', `<ol>
+      <li>その項目の <span class="k minor">△</span>（軽度）か <span class="k major">×</span>（修理・交換が必要）を押します。<span class="k ok">✓</span> は異常なしです。同じボタンをもう一度押すと取り消せます。</li>
+      <li>出てきた「破損あり」「修理依頼済」などのボタンを押すと、内容が入ります。足りないところは文字で書き足します。</li>
+      <li>前の月にも異常があった項目には前回の内容が表示され、「前回と同じ内容」を押すだけで引き継げます。</li>
+      <li>修理などが済んだら「<b>対応済</b>」に切り替えます。</li>
+      <li>点検項目にない不具合や気付いたことは、一番下の「上記の点検項目以外で気付いたこと」に書きます。</li></ol>`],
+    ['marks','画面の見方', `<ul>
+      <li>月のボタンが<b>黄色</b>の月は、点検が途中です（「完了した場所の数/全体」が出ます）。</li>
+      <li>「点検途中」と出ている場所は、まだ入力していない項目があります。</li>
+      <li>「対象外」と出ている項目は、その月は点検しなくてよい項目です（例：（冬季）加湿器は4〜11月は対象外）。</li>
+      <li>「この場所の年間の記録を見る」で、紙の点検表と同じ形の一覧が見られます。</li></ul>`],
+    ['report','報告・確認（管理職・安全点検係）', `<ul>
+      <li>「報告・確認」タブで月を選ぶと、点検の完了数、× と △ の一覧、班ごとの進み具合、年間の実施状況が見られます。</li>
+      <li>一覧の場所名を押すと、その場所の記録を開けます。対応が済んだものは「対応済」に切り替えます。</li>
+      <li>回議で管理職が書いた所見・指示は、安全点検係が「報告・確認」の「<b>所見・指示</b>」欄に入力します。入力した内容は、次に印刷する報告書にも載ります。</li>
+      <li>「<b>報告書（A4）</b>」に切り替えて「印刷する」を押すと、押印欄（校長・教頭・教務主任・文書事務取扱主任・安全点検係）の付いた報告書を印刷できます（用紙はA4・縦）。</li></ul>`],
+    ['settings','設定（安全点検係）', `<ul>
+      <li>班と担当箇所、点検箇所、点検項目、定型文、年度を変えられます。</li>
+      <li>担当箇所の追加・削除は「設定」→「班と担当箇所」で行います（回る順は各班が「点検する」の画面で変えられます）。</li>
+      <li>変えたら画面下の「<b>設定を保存</b>」を押します。すべての端末に反映されます。</li>
+      <li>点検項目を変えると、同じ点検表を使うすべての場所に反映されます。</li></ul>`],
+    ['trouble','困ったとき', `<ul>
+      <li><b>「データを読み込めません」と出る</b>：通信状態を確認して、ページを開き直してください。</li>
+      <li><b>右上が「未保存・再送中」のまま</b>：通信が切れています。つながると自動で保存されるので、画面を閉じずに待ってください。</li>
+      <li><b>自分の班が見つからない・担当箇所が違う</b>：安全点検係の先生に伝えてください（「設定」で直せます）。</li>
+      <li><b>間違えて入力した</b>：同じボタンをもう一度押すと取り消せます。</li></ul>`]
+  ];
+  return `<div class="help">
+    <div class="sec-h"><h2>使い方</h2></div>
+    <div class="toc">${S1.map(([id, t]) => `<button class="chip" data-act="hjump" data-id="${id}">${t}</button>`).join('')}</div>
+    ${S1.map(([id, t, body]) => `<section id="help-${id}"><h3>${t}</h3>${body}</section>`).join('')}
+  </div>`;
+}
+/* ---- 設定 ---- */
+function settingsDirty(){ return !!S.draftCfg && JSON.stringify(S.draftCfg) !== JSON.stringify(S.config); }
+function findProblems(c){
+  const bad = new Set(), msgs = [];
+  const check = (list, keyOf, nameOf, label) => {
+    const seen = {};
+    for (const x of list){ const n = normName(nameOf(x)); if (n) (seen[n] = seen[n] || []).push(x); }
+    for (const n in seen) if (seen[n].length > 1){ seen[n].forEach(x => bad.add(keyOf(x))); msgs.push(label + '「' + nameOf(seen[n][0]) + '」が重複'); }
+  };
+  check(c.places, p => 'place:' + p.id, p => p.name, '点検箇所');
+  check(c.teams, t => 'team:' + t.id, t => t.name, '班');
+  check(c.sheets, s => 'sheet:' + s.id, s => s.name, '点検表');
+  c.places.forEach(p => { if (!p.name.trim()){ bad.add('place:' + p.id); msgs.push('名前のない点検箇所があります'); } });
+  c.sheets.forEach(s => { if (!s.name.trim()){ bad.add('sheet:' + s.id); msgs.push('名前のない点検表があります'); } });
+  return {bad, msgs:[...new Set(msgs)]};
+}
+function dupAttr(key, bad){ return bad.has(key) ? ' dup' : ''; }
+function viewSettings(){
+  const c = S.draftCfg || (S.draftCfg = clone(S.config));
+  const dis = !S.loaded ? ' disabled' : '';
+  const pr = findProblems(c);
+  const tabs = [['teams','班と担当箇所'],['places','点検箇所'],['items','点検項目'],['phrases','定型文'],['other','年度・その他']];
+  let body = '';
+  if (S.setTab === 'teams') body = setTeams(c, dis, pr);
+  else if (S.setTab === 'places') body = setPlaces(c, dis, pr);
+  else if (S.setTab === 'items') body = setItems(c, dis, pr);
+  else if (S.setTab === 'phrases') body = `<div class="card"><h3>不良の内容の定型文</h3><p>△・× を付けたときに出るボタンです。1行に1つずつ書きます。</p>
+    <div class="row2">
+      <div class="field"><label for="s-ph-state">状態</label><textarea class="input" id="s-ph-state" rows="10" data-e="phrases" data-k="state"${dis}>${h(c.phrases.state.join('\n'))}</textarea></div>
+      <div class="field"><label for="s-ph-action">対応</label><textarea class="input" id="s-ph-action" rows="10" data-e="phrases" data-k="action"${dis}>${h(c.phrases.action.join('\n'))}</textarea></div>
+    </div></div>`;
+  else body = setOther(c, dis);
+  return `${topBanner()}
+  <div class="sec-h"><h2>設定</h2></div>
+  <nav class="subnav" aria-label="設定の項目">${tabs.map(([k, l]) => `<button data-act="settab" data-k="${k}" aria-pressed="${S.setTab === k}">${l}</button>`).join('')}</nav>
+  ${body}
+  <div class="savebar" id="savebar">
+    <button class="btn primary" data-act="save-settings"${dis}>設定を保存</button>
+    <button class="btn" data-act="reset-settings">変更を取り消す</button>
+    <span class="msg" id="save-msg"></span>
+    <span class="err" id="save-err" role="alert"></span>
+  </div>`;
+}
+function updateSaveBar(){
+  const bar = $('#savebar'); if (!bar || !S.draftCfg) return;
+  const dirty = settingsDirty(), pr = findProblems(S.draftCfg);
+  bar.classList.toggle('dirty', dirty);
+  $('#save-msg').textContent = dirty ? '保存していない変更があります' : '保存すると、すべての端末に反映されます';
+  $('#save-err').textContent = pr.msgs.length ? '保存できません：' + pr.msgs.join('、') : '';
+  document.querySelectorAll('[data-dupkey]').forEach(el => {
+    const on = pr.bad.has(el.dataset.dupkey);
+    el.classList.toggle('dup', on);
+    const n = el.parentNode.querySelector('.dupnote'); if (n) n.hidden = !on;
+  });
+}
+function placeOptions(c, sel){
+  return c.sheets.map(s => `<option value="${h(s.id)}"${s.id === sel ? ' selected' : ''}>${h(s.n)}．${h(s.name)}</option>`).join('');
+}
+function setTeams(c, dis, pr){
+  const places = buildPlaces(c);
+  const pName = (id) => { const p = places.find(x => x.id === id); return p ? p.name : null; };
+  const owner = {};
+  c.teams.forEach(t => t.places.forEach(pid => { (owner[pid] = owner[pid] || []).push(t.name || '名前なしの班'); }));
+  const unassigned = places.filter(p => !owner[p.id]);
+  const rows = c.teams.map(t => {
+    const route = t.places.filter(pName);
+    const open = S.openTeam === t.id;
+    return `<div class="tm">
+      <button class="tm-h" data-act="team-open" data-team="${h(t.id)}" aria-expanded="${open}"><span>${h(t.name || '（名前なし）')}</span><span class="cnt">${route.length}か所</span><span class="chev" aria-hidden="true">${open ? '▲' : '▼'}</span></button>
+      ${open ? `<div class="tm-b">
+        <div class="row2" style="margin-top:12px">
+          <div class="field"><label>班の名前</label><input class="input${dupAttr('team:' + t.id, pr.bad)}" type="text" data-e="team" data-f="name" data-id="${h(t.id)}" data-dupkey="team:${h(t.id)}" value="${h(t.name)}" placeholder="例：1年ブロック"${dis}><span class="dupnote" hidden>同じ名前の班がすでにあります</span></div>
+          <div class="field"><label>メンバー（任意）</label><input class="input" type="text" data-e="team" data-f="members" data-id="${h(t.id)}" value="${h(t.members)}" placeholder="例：山田・佐藤・鈴木"${dis}></div>
+        </div>
+        <div class="lbl" style="margin-top:10px">担当箇所（上から回る順）</div>
+        ${route.length ? `<ol class="route">${route.map((pid, i) => `<li><b class="num">${i + 1}</b><span>${h(pName(pid))}${owner[pid].length > 1 ? '<small class="muted">　ほかの班と重複</small>' : ''}</span>
+          <button class="btn small" data-act="tp-move" data-team="${h(t.id)}" data-pid="${h(pid)}" data-d="-1" aria-label="上へ"${i === 0 || dis ? ' disabled' : ''}>↑</button>
+          <button class="btn small" data-act="tp-move" data-team="${h(t.id)}" data-pid="${h(pid)}" data-d="1" aria-label="下へ"${i === route.length - 1 || dis ? ' disabled' : ''}>↓</button>
+          <button class="btn small" data-act="tp-del" data-team="${h(t.id)}" data-pid="${h(pid)}"${dis}>外す</button></li>`).join('')}</ol>` : '<p style="margin:8px 0">まだ担当箇所がありません。</p>'}
+        <div class="team-tools">
+          <select class="input" data-addto="${h(t.id)}" aria-label="担当箇所を追加"${dis}>
+            <option value="">＋ 担当箇所を追加…</option>
+            ${places.filter(p => !t.places.includes(p.id)).map(p => `<option value="${h(p.id)}">${h(p.name)}${owner[p.id] ? `（${h(owner[p.id].join('・'))}）` : ''}</option>`).join('')}
+          </select>
+          <button class="btn danger" data-act="team-del" data-team="${h(t.id)}"${dis}>${S.confirm === 'team:' + t.id ? 'もう一度押すと削除します' : 'この班を削除'}</button>
+        </div></div>` : ''}
+    </div>`;
+  }).join('');
+  return `<div class="card"><h3>班と担当箇所</h3><p>班の名前を押すと、担当箇所の追加・並べ替えができます。「点検する」で班を選ぶと、この順に表示されます。</p>
+    ${rows}
+    <button class="btn" data-act="team-add"${dis}>＋ 班を追加</button>
+    ${unassigned.length ? `<div class="warnlist"><b>どの班にも入っていない点検箇所（${unassigned.length}か所）</b><br>${unassigned.map(p => h(p.name)).join('、')}</div>` : ''}
+  </div>`;
+}
+function setPlaces(c, dis, pr){
+  const rows = c.places.map((p, i) => {
+    const s = c.sheets.find(x => x.id === p.sheet);
+    return `<div class="plrow">
+      <span class="pn num">${s ? h(s.n) : ''}</span>
+      <div><input class="input sm${dupAttr('place:' + p.id, pr.bad)}" type="text" data-e="place" data-f="name" data-id="${h(p.id)}" data-dupkey="place:${h(p.id)}" value="${h(p.name)}" aria-label="点検箇所の名前"${dis}><span class="dupnote" hidden>同じ名前の点検箇所があります</span></div>
+      <select class="input sm" data-e="place" data-f="sheet" data-id="${h(p.id)}" aria-label="使う点検表"${dis}>${placeOptions(c, p.sheet)}</select>
+      <div class="acts">
+        <button class="btn small" data-act="pl-move" data-id="${h(p.id)}" data-d="-1" aria-label="上へ"${i === 0 || dis ? ' disabled' : ''}>↑</button>
+        <button class="btn small" data-act="pl-move" data-id="${h(p.id)}" data-d="1" aria-label="下へ"${i === c.places.length - 1 || dis ? ' disabled' : ''}>↓</button>
+        <button class="btn small danger" data-act="pl-del" data-id="${h(p.id)}"${dis}>${S.confirm === 'place:' + p.id ? 'もう一度' : '削除'}</button>
+      </div></div>`;
+  }).join('');
+  return `<div class="card"><h3>点検箇所（${c.places.length}か所）</h3>
+    <p>名前と、その場所で使う点検表を決めます。削除した場所は、班の担当からも外れます（これまでの記録はスプレッドシートに残ります）。</p>
+    ${rows}
+    <div class="addrow">
+      <select class="input sm" id="new-place-sheet" aria-label="使う点検表">${placeOptions(c, '')}</select>
+      <input class="input sm" id="new-place-name" type="text" placeholder="新しい点検箇所の名前（例：2年3組教室）" aria-label="新しい点検箇所の名前">
+      <button class="btn primary" data-act="pl-add"${dis}>＋ 追加</button>
+    </div></div>`;
+}
+function setItems(c, dis, pr){
+  if (!S.editSheet || !c.sheets.some(s => s.id === S.editSheet)) S.editSheet = c.sheets[0] && c.sheets[0].id;
+  const s = c.sheets.find(x => x.id === S.editSheet);
+  const users = c.places.filter(p => p.sheet === (s && s.id));
+  const sel = `<div class="field" style="margin-bottom:12px"><label for="edit-sheet">編集する点検表</label>
+    <select class="input" id="edit-sheet" data-e="editsheet">${c.sheets.map(x => `<option value="${h(x.id)}"${x.id === S.editSheet ? ' selected' : ''}>${h(x.n)}．${h(x.name)}（${x.items.length}項目・${c.places.filter(p => p.sheet === x.id).length}か所で使用）</option>`).join('')}</select></div>`;
+  if (!s) return `<div class="card">${sel}</div>`;
+  const monthSel = (it) => {
+    const v = it.months ? it.months.join(',') : '';
+    const opts = MONTH_PRESETS.slice();
+    if (v && !opts.some(o => o.v === v)) opts.push({v, label:monthsText(it.months) + 'のみ'});
+    return `<select class="input sm" data-e="item" data-f="months" data-id="${h(it.id)}" aria-label="点検する月"${dis}>${opts.map(o => `<option value="${o.v}"${o.v === v ? ' selected' : ''}>${h(o.label)}</option>`).join('')}</select>`;
+  };
+  const rows = s.items.map((it, i) => `<div class="ied">
+      <div class="ino num">${i + 1}</div>
+      <div>
+        <textarea class="input" rows="2" data-e="item" data-f="text" data-id="${h(it.id)}" aria-label="No.${i + 1} の点検項目"${dis}>${h(it.text)}</textarea>
+        <div class="ied-opts">
+          ${METHODS.map(m => `<button class="mt" data-act="item-meth" data-id="${h(it.id)}" data-m="${m}" aria-pressed="${it.methods.includes(m)}"${dis}>${m}</button>`).join('')}
+          <input class="input sm" type="text" data-e="item" data-f="group" data-id="${h(it.id)}" value="${h(it.group)}" placeholder="区分（任意）" aria-label="区分"${dis}>
+          ${monthSel(it)}
+        </div>
+      </div>
+      <div class="ied-act">
+        <button class="btn small" data-act="it-move" data-id="${h(it.id)}" data-d="-1" aria-label="上へ"${i === 0 || dis ? ' disabled' : ''}>↑</button>
+        <button class="btn small" data-act="it-move" data-id="${h(it.id)}" data-d="1" aria-label="下へ"${i === s.items.length - 1 || dis ? ' disabled' : ''}>↓</button>
+        <button class="btn small danger" data-act="it-del" data-id="${h(it.id)}"${dis}>${S.confirm === 'item:' + it.id ? 'もう一度' : '削除'}</button>
+      </div></div>`).join('');
+  return `<div class="card">${sel}
+    <div class="row2" style="grid-template-columns:7em 1fr">
+      <div class="field"><label>点検表の番号</label><input class="input sm" type="text" data-e="sheet" data-f="n" value="${h(s.n)}"${dis}></div>
+      <div class="field"><label>点検表の名前</label><input class="input sm${dupAttr('sheet:' + s.id, pr.bad)}" type="text" data-e="sheet" data-f="name" data-dupkey="sheet:${h(s.id)}" value="${h(s.name)}"${dis}><span class="dupnote" hidden>同じ名前の点検表があります</span></div>
+    </div>
+    <p style="margin-top:10px">この点検表を使う場所：${users.length ? users.map(p => h(p.name)).join('、') : 'なし'}。項目を変えると、これらすべての場所に反映されます。No. は上から順に自動で付きます。</p>
+    ${rows}
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+      <button class="btn" data-act="it-add"${dis}>＋ 項目を追加</button>
+      <button class="btn" data-act="sh-copy"${dis}>この点検表を複製して新しく作る</button>
+      <button class="btn danger" data-act="sh-del"${users.length || dis ? ' disabled' : ''}>${S.confirm === 'sheet:' + s.id ? 'もう一度押すと削除します' : 'この点検表を削除'}</button>
+    </div>
+    ${users.length ? '<p style="margin-top:8px;font-size:13px">使っている場所がある点検表は削除できません。</p>' : ''}
+  </div>`;
+}
+function setOther(c, dis){
+  return `<div class="card"><h3>画面の移転先</h3>
+    <p>画面を別の住所（例：GitHub から学校のホームページ）に移したとき、新しい住所をここに入れて保存します。古い住所を開いた人に、新しい住所が案内されます。記録はそのまま引き継がれます。移していないときは空欄のままにします。</p>
+    <input class="input" type="url" data-e="moveTo" value="${h(c.moveTo || '')}" placeholder="https://（学校のホームページのアドレス）/anzen/index.html"${dis}></div>
+  <div class="card"><h3>年度</h3>    <p>年度を変えると、その年度の記録に切り替わります（前の年度の記録は残ります）。</p>
+    <div style="display:flex;align-items:center;gap:8px">令和 <input class="input num" type="number" min="1" max="99" value="${c.year}" data-e="year" style="width:90px"${dis}> 年度</div></div>
+  ${seedReady() ? `<div class="card" style="border-color:var(--accent)"><h3>紙の記録を取り込む</h3>
+    <p>紙に記録した4月〜9月の点検結果を取り込みます。1回だけ行ってください。アプリで入力・修正した記録は上書きしません。</p>
+    <button class="btn primary" data-act="import-seed"${dis}>${S.importing ? '取り込み中…' : '紙の記録を取り込む'}</button></div>` : ''}
+`;
+}
+
+/* 設定の入力は下書きにすぐ反映（再描画しない） */
+function draftInput(el){
+  const c = S.draftCfg; if (!c) return;
+  const e = el.dataset.e, f = el.dataset.f, id = el.dataset.id;
+  if (e === 'team'){ const t = c.teams.find(x => x.id === id); if (t) t[f] = el.value.trim(); }
+  else if (e === 'place'){ const p = c.places.find(x => x.id === id); if (p) p[f] = f === 'name' ? el.value.trim() : el.value; }
+  else if (e === 'sheet'){ const s = c.sheets.find(x => x.id === S.editSheet); if (s) s[f] = el.value.trim(); }
+  else if (e === 'item'){
+    const s = c.sheets.find(x => x.id === S.editSheet); const it = s && s.items.find(x => x.id === id);
+    if (it){ if (f === 'months') it.months = el.value ? el.value.split(',').map(Number) : null; else it[f] = f === 'text' ? el.value : el.value.trim(); }
+  }
+  else if (e === 'phrases') c.phrases[el.dataset.k] = el.value.split('\n').map(s => s.trim()).filter(Boolean);
+  else if (e === 'moveTo') c.moveTo = el.value.trim();
+  else if (e === 'year'){ const y = parseInt(el.value, 10); if (y > 0 && y < 100) c.year = y; }
+  updateSaveBar();
+}
+function moveIn(arr, i, d){ const j = i + d; if (i < 0 || j < 0 || j >= arr.length) return; [arr[i], arr[j]] = [arr[j], arr[i]]; }
+function confirmTwice(key){ if (S.confirm !== key){ S.confirm = key; render(true); return false; } S.confirm = null; return true; }
+
+/* ---- events ---- */
+function markItem(itemId, mark){
+  const cur = ((S.records[recKey(S.placeId, S.period)] || {}).marks || {})[itemId];
+  patchRecord(S.placeId, S.period, {marks:{[itemId]: cur === mark ? null : mark}});
+  render(true);
+}
+function toggleChip(target, text){
+  const r = S.records[recKey(S.placeId, S.period)] || {};
+  const id = target.slice(2);
+  const parts = String((r.notes || {})[id] || '').split('、').map(s => s.trim()).filter(Boolean);
+  const i = parts.indexOf(text);
+  if (i >= 0) parts.splice(i, 1); else parts.push(text);
+  patchRecord(S.placeId, S.period, {notes:{[id]: parts.join('、')}});
+  render(true);
+}
+function openPlace(id){ S.placeId = id; S.annual = false; render(true); window.scrollTo(0, 0); }
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]');
+  if (!b || b.disabled) return;
+  const a = b.dataset.act;
+  if (!/^(team-del|pl-del|it-del|sh-del)$/.test(a)) S.confirm = null;
+  const c = S.draftCfg;
+  const sheet = () => c.sheets.find(x => x.id === S.editSheet);
+  if (a === 'tab'){ S.tab = b.dataset.tab; if (S.tab !== 'check') S.placeId = null; render(true); window.scrollTo(0, 0); }
+  else if (a === 'period'){ S.period = b.dataset.period; render(true); }
+  else if (a === 'filter'){ S.filter = b.dataset.filter; render(true); }
+  else if (a === 'team'){ S.reorder = null; S.team = b.dataset.team; ls.set('anzen-team', S.team); render(true); }
+  else if (a === 'open') openPlace(b.dataset.place);
+  else if (a === 'goto'){ S.tab = 'check'; S.period = b.dataset.period; openPlace(b.dataset.place); }
+  else if (a === 'back'){ const from = S.placeId; S.placeId = null; S.annual = false; render(true); const el = document.querySelector(`.pcard[data-place="${CSS.escape(from || '')}"]`); if (el) el.scrollIntoView({block:'center'}); }
+  else if (a === 'mark') markItem(b.dataset.item, b.dataset.mark);
+  else if (a === 'gjump'){ const g = document.getElementById('grp-' + b.dataset.g); if (g) g.scrollIntoView({block:'start', behavior:'smooth'}); }
+  else if (a === 'allok'){
+    const place = placeById(S.placeId); const r = S.records[recKey(S.placeId, S.period)] || {}; const marks = r.marks || {};
+    const filled = place.items.filter(it => itemApplies(it, S.period, r) && !marks[it.id]).map(it => it.id);
+    if (!filled.length) return;
+    const pid = S.placeId, per = S.period;
+    patchRecord(pid, per, {marks:Object.fromEntries(filled.map(n => [n, 'ok']))});
+    render(true);
+    showToast(filled.length + '項目を「異常なし」にしました', '元に戻す', () => { patchRecord(pid, per, {marks:Object.fromEntries(filled.map(n => [n, null]))}); render(true); });
+  }
+  else if (a === 'chip') toggleChip(b.dataset.target, b.dataset.text);
+  else if (a === 'copyprev'){
+    const prev = prevRecord(S.placeId, S.period); if (!prev) return;
+    patchRecord(S.placeId, S.period, {notes:{[b.dataset.item]: (prev.r.notes || {})[b.dataset.item] || ''}}); render(true);
+  }
+  else if (a === 'copymemo'){
+    const prev = prevRecord(S.placeId, S.period); if (!prev) return;
+    const cur = ((S.records[recKey(S.placeId, S.period)] || {}).memo || '').trim();
+    patchRecord(S.placeId, S.period, {memo: cur ? cur + '\n' + prev.r.memo : prev.r.memo}); render(true);
+  }
+  else if (a === 'status'){ patchRecord(S.placeId, S.period, {status:{[b.dataset.item]: b.dataset.val}}); render(true); }
+  else if (a === 'rstatus'){ patchRecord(b.dataset.place, b.dataset.period, {status:{[b.dataset.item]: b.dataset.val}}); render(true); }
+  else if (a === 'annual'){ S.annual = !S.annual; render(true); }
+  else if (a === 'reorder'){ const tm = currentTeam(); if (!tm) return; S.reorder = tm.places.filter(pid => placeById(pid)); render(true); window.scrollTo(0, 0); }
+  else if (a === 'ro-move'){ moveIn(S.reorder, +b.dataset.i, +b.dataset.d); render(true); }
+  else if (a === 'ro-cancel'){ S.reorder = null; render(true); }
+  else if (a === 'ro-save'){
+    const tm = currentTeam(); if (!tm) return;
+    const rest = tm.places.filter(pid => !S.reorder.includes(pid));
+    S.reorderBusy = true; render(true);
+    store.setTeamOrder(tm.id, S.reorder.concat(rest)).then(() => { S.reorder = null; showToast('回る順を保存しました'); },
+      () => showToast('保存できませんでした。通信状態を確認して、もう一度お試しください。'))
+      .then(() => { S.reorderBusy = false; render(true); });
+  }  else if (a === 'hjump'){ const el = document.getElementById('help-' + b.dataset.id); if (el) el.scrollIntoView({block:'start', behavior:'smooth'}); }
+  else if (a === 'rview'){ S.reportView = b.dataset.v; render(true); }
+  else if (a === 'print'){ try { window.print(); } catch(err){ showToast('印刷を開けませんでした。ブラウザのメニューから印刷してください。'); } }
+  /* 設定 */
+  else if (a === 'settab'){ S.setTab = b.dataset.k; ls.set('anzen-settab', S.setTab); render(true); }
+  else if (a === 'team-open'){ S.openTeam = S.openTeam === b.dataset.team ? null : b.dataset.team; render(true); }
+  else if (a === 'team-add'){
+    const used = new Set(c.teams.map(t => normName(t.name)));
+    let n = c.teams.length + 1; while (used.has(normName(n + '班'))) n++;
+    const t = {id:uid('t'), name:n + '班', members:'', places:[]};
+    c.teams.push(t); S.openTeam = t.id; render(true);
+  }
+  else if (a === 'team-del'){ if (!confirmTwice('team:' + b.dataset.team)) return; c.teams = c.teams.filter(t => t.id !== b.dataset.team); render(true); }
+  else if (a === 'tp-move' || a === 'tp-del'){
+    const t = c.teams.find(x => x.id === b.dataset.team); if (!t) return;
+    const i = t.places.indexOf(b.dataset.pid);
+    if (a === 'tp-del') t.places.splice(i, 1); else moveIn(t.places, i, +b.dataset.d);
+    render(true);
+  }
+  else if (a === 'pl-move'){ moveIn(c.places, c.places.findIndex(p => p.id === b.dataset.id), +b.dataset.d); render(true); }
+  else if (a === 'pl-del'){
+    if (!confirmTwice('place:' + b.dataset.id)) return;
+    c.places = c.places.filter(p => p.id !== b.dataset.id);
+    c.teams.forEach(t => { t.places = t.places.filter(pid => pid !== b.dataset.id); });
+    render(true);
+  }
+  else if (a === 'pl-add'){
+    const name = $('#new-place-name').value.trim(), sh = $('#new-place-sheet').value;
+    if (!name){ showToast('新しい点検箇所の名前を入れてください。'); $('#new-place-name').focus(); return; }
+    if (c.places.some(p => normName(p.name) === normName(name))){ showToast('同じ名前の点検箇所がすでにあります。'); return; }
+    c.places.push({id:uid(sh + '-'), sheet:sh, name, since:todayISO()}); render(true);
+    showToast('「' + name + '」を追加しました。「班と担当箇所」で班に入れてください。');
+  }
+  else if (a === 'item-meth'){
+    const it = sheet().items.find(x => x.id === b.dataset.id); if (!it) return;
+    it.methods = it.methods.includes(b.dataset.m) ? it.methods.filter(m => m !== b.dataset.m) : METHODS.filter(m => m === b.dataset.m || it.methods.includes(m));
+    render(true);
+  }
+  else if (a === 'it-move'){ const s = sheet(); moveIn(s.items, s.items.findIndex(x => x.id === b.dataset.id), +b.dataset.d); render(true); }
+  else if (a === 'it-del'){ if (!confirmTwice('item:' + b.dataset.id)) return; const s = sheet(); s.items = s.items.filter(x => x.id !== b.dataset.id); render(true); }
+  else if (a === 'it-add'){
+    const s = sheet(); const it = {id:uid('i'), text:'', methods:['目視'], group:s.items.length ? s.items[s.items.length - 1].group : '', months:null, since:todayISO()};
+    s.items.push(it); render(true);
+    const ta = document.querySelector(`textarea[data-id="${CSS.escape(it.id)}"]`); if (ta){ ta.scrollIntoView({block:'center'}); ta.focus(); }
+  }
+  else if (a === 'sh-copy'){
+    const s = sheet(); const ns = clone(s); ns.id = uid('s'); ns.name = s.name + '（コピー）';
+    ns.items.forEach(it => { it.id = uid('i'); });
+    c.sheets.push(ns); S.editSheet = ns.id; render(true);
+  }
+  else if (a === 'sh-del'){ if (!confirmTwice('sheet:' + S.editSheet)) return; c.sheets = c.sheets.filter(x => x.id !== S.editSheet); S.editSheet = null; render(true); }
+  else if (a === 'reset-settings'){ S.draftCfg = null; render(true); showToast('変更を取り消しました'); }
+  else if (a === 'save-settings'){
+    const cfg = clone(c);
+    cfg.sheets.forEach(s => { s.items = s.items.filter(it => it.text.trim()); });
+    const pr = findProblems(cfg);
+    if (pr.msgs.length){ updateSaveBar(); showToast('保存できません。赤い欄を直してください。'); const f = document.querySelector('.input.dup'); if (f) f.focus(); return; }
+    const valid = new Set(cfg.places.map(p => p.id));
+    cfg.teams.forEach((t, i) => { if (!t.name) t.name = (i + 1) + '班'; t.places = t.places.filter(pid => valid.has(pid)); });
+    b.disabled = true;
+    store.saveConfig(cfg).then(() => { S.draftCfg = null; showToast('設定を保存しました'); render(true); },
+      err => { b.disabled = false; showToast('保存できませんでした。通信状態を確認して、もう一度お試しください。'); });
+  }
+  else if (a === 'import-seed'){
+    if (S.importing) return;
+    S.importing = true; render(true);
+    (async () => {
+      try {
+        const seed = await store.getSeed();
+        if (!seed) throw new Error('初期データが見つかりません');
+        const res = await store.importRecords(expandSeed(seed));
+        S.draftCfg = null;
+        showToast(`取り込みました（${res.added}件${res.skipped ? '、アプリで入力済みのため' + res.skipped + '件はそのまま' : ''}）`);
+      } catch(err){ showToast('取り込めませんでした。通信状態を確認して、もう一度お試しください。'); }
+      S.importing = false; render(true);
+    })();
+  }
+});
+
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (!el.dataset) return;
+  if (el.dataset.addto){
+    if (!el.value) return;
+    const t = S.draftCfg.teams.find(x => x.id === el.dataset.addto);
+    if (t && !t.places.includes(el.value)) t.places.push(el.value);
+    el.blur(); render(true); return;
+  }
+  if (el.dataset.e === 'editsheet'){ S.editSheet = el.value; S.confirm = null; el.blur(); render(true); return; }
+  if (el.tagName === 'SELECT' && el.dataset.e){ draftInput(el); el.blur(); render(true); return; }
+  if (el.dataset.field === 'team' && S.placeId){
+    const t = teamById(el.value);
+    patchRecord(S.placeId, S.period, {team:el.value, teamName:t ? t.name : ''});
+    el.blur(); render(true);
+  }
+});
+document.addEventListener('input', e => {
+  const el = e.target;
+  if (!el.dataset) return;
+  if (el.dataset.e && el.tagName !== 'SELECT'){ draftInput(el); return; }
+  const f = el.dataset.field;
+  if (f === 'shoken'){ patchShoken(S.period, el.value); return; }
+  if (!f || !S.placeId) return;
+  if (f === 'note') patchRecord(S.placeId, S.period, {notes:{[el.dataset.item]: el.value}});
+  else if (f === 'memo') patchRecord(S.placeId, S.period, {memo:el.value});
+  else if (f === 'date' && el.value) patchRecord(S.placeId, S.period, {date:el.value});
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.matches && e.target.matches('input[data-field], input[data-e]')) e.target.blur();
+});
+
+/* ---- boot ---- */
+const callbacks = {
+  config(c){
+    S.config = normConfig(c);
+    if (S.config.year !== S.year){ S.year = S.config.year; S.server = {}; S.loaded = false; recompute(); store.resubscribe(); }
+    S.places = buildPlaces(S.config);
+    render();
+  },
+  records(m){ S.server = m; S.loaded = true; S.loadFailed = false; recompute(); if (S.sync === 'loading' || S.sync === 'error') setSync(pendingCount() ? 'saving' : 'saved'); render(); },
+  one(k, r){ S.server[k] = r; recompute(); render(); },
+  ok(){ if (S.sync === 'error' && !pendingCount()) setSync('saved'); },
+  error(){ setSync('error'); if (!S.loaded && !S.loadFailed){ S.loadFailed = true; render(); } }
+};
+function boot(){
+  store = (hasGoogleRun() || /^https:/.test(API_URL)) ? makeGasStore() : makeLocalStore();
+  S.mode = store.mode;
+  store.start(callbacks);
+}
+/* 見出し部分の高さを測り、留めるボタン列の位置に使う */
+(function(){
+  const top = document.querySelector('.top');
+  const set = () => document.documentElement.style.setProperty('--top-h', top.offsetHeight + 'px');
+  set();
+  if (window.ResizeObserver) new ResizeObserver(set).observe(top); else window.addEventListener('resize', set);
+})();render(true);
+boot();
+})();
+</script>
