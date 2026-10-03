@@ -231,7 +231,7 @@ button.cell:hover{background:var(--accent-soft)}
 .empty{padding:16px;border:1px dashed var(--line-strong);border-radius:12px;color:var(--muted);text-align:center;background:var(--surface)}
 
 /* A4 報告書（紙の見た目で固定） */
-.a4wrap{overflow-x:auto;padding-bottom:8px}
+.a4wrap{overflow:hidden;padding-bottom:8px}
 .a4{background:#fff;color:#111;width:210mm;min-height:297mm;margin:0 auto;padding:13mm 12mm;box-shadow:0 2px 14px rgba(0,0,0,.18);font-family:var(--font);font-size:9.3pt;line-height:1.45}
 .a4-head{display:flex;justify-content:space-between;align-items:flex-start;gap:6mm;margin-bottom:4mm}
 .a4-title{font-size:15pt;font-weight:700;letter-spacing:.06em}
@@ -252,6 +252,8 @@ button.cell:hover{background:var(--accent-soft)}
 .a4t .sym{font-weight:700;font-size:10pt}
 .a4 .none{color:#555;font-size:9pt;margin:0}
 .a4 .memo-box{border:0.6pt solid #333;height:22mm;margin-top:1mm}
+.a4 .stampwrap{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:1.5mm}
+.a4 .kian{font-size:9.5pt;letter-spacing:.05em;border-bottom:0.6pt solid #333;padding:0 1mm 0.8mm;white-space:pre}
 .a4.land{width:297mm;min-height:210mm;padding:10mm 11mm}
 .a4 .sm{font-size:7.8pt;color:#333;line-height:1.35;margin-top:0.6mm}
 .a4 .since{font-size:7.5pt;color:#444}
@@ -272,7 +274,8 @@ button.cell:hover{background:var(--accent-soft)}
 .help section{scroll-margin-top:130px}/* 場所・設定・使い方のボタン列は、スクロールしても見出しの下に留める */
 .stepper,.subnav,.help .toc{position:sticky;top:calc(var(--top-h,120px) + env(safe-area-inset-top,0px));z-index:15;background:var(--bg);padding-block:8px;margin-inline:-4px;padding-inline:4px;box-shadow:0 6px 8px -8px rgba(0,0,0,.25)}
 .stepper{margin-bottom:10px}
-.grp,.help section,.item{scroll-margin-top:calc(var(--top-h,120px) + 70px)}/* settings */
+.grp,.help section,.item{scroll-margin-top:calc(var(--top-h,120px) + 70px)}.rbar{position:sticky;top:calc(var(--top-h,120px) + env(safe-area-inset-top,0px));z-index:15;background:var(--bg);padding-block:8px;margin-inline:-4px;padding-inline:4px;box-shadow:0 6px 8px -8px rgba(0,0,0,.25)}
+/* settings */
 .subnav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
 .subnav button{border:1.5px solid var(--line-strong);background:var(--surface);border-radius:999px;padding:7px 14px;font-size:14.5px;font-weight:700;color:var(--muted)}
 .subnav button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
@@ -346,7 +349,7 @@ button.cell:hover{background:var(--accent-soft)}
   main{padding:0!important}
   .wrap{max-width:none;padding:0}
   .a4wrap{overflow:visible;padding:0}
-  .a4{width:auto;min-height:0;padding:0;box-shadow:none;margin:0}
+  .a4{width:auto;min-height:0;padding:0;box-shadow:none;margin:0;zoom:1!important}
   .tablewrap,.items,.issue,.stat,.memo,.teamrow{border-color:#999;box-shadow:none}
 }
 </style>
@@ -815,7 +818,15 @@ function showToast(msg, btnLabel, onBtn){
 }
 
 /* ---- render ---- */
-function render(force){
+/* 報告書のプレビューを画面の横幅に合わせて縮小する（印刷するときは原寸） */
+function fitA4(){
+  const wrap = document.querySelector('.a4wrap'), a4 = wrap && wrap.querySelector('.a4');
+  if (!a4) return;
+  a4.style.zoom = 1;
+  const z = Math.min(1, (wrap.clientWidth - 4) / a4.offsetWidth);
+  a4.style.zoom = z;
+}
+window.addEventListener('resize', fitA4);function render(force){
   const ae = document.activeElement;
   if (!force && ae && ae.closest && ae.closest('#view') && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)){ S.dirty = true; return; }
   S.dirty = false;
@@ -828,6 +839,7 @@ function render(force){
   else if (S.tab === 'report') v.innerHTML = viewReport();
   else if (S.tab === 'help') v.innerHTML = viewHelp();
   else { v.innerHTML = viewSettings(); updateSaveBar(); }
+  fitA4();
   const st = $('.stepper'), cur = st && st.querySelector('.on');
   if (cur) st.scrollLeft = cur.offsetLeft - st.clientWidth / 2 + cur.offsetWidth / 2;
 }
@@ -1202,7 +1214,7 @@ function reportData(period){
 }
 function viewReport(){
   const d = reportData(S.period);
-  const toggle = `<div class="sec-h noprint"><h2>${h(d.per.label)}の点検結果</h2>
+  const toggle = `<div class="sec-h noprint rbar"><h2>${h(d.per.label)}の点検結果</h2>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       <div class="seg" role="group" aria-label="表示の切り替え">
         <button data-act="rview" data-v="screen" aria-pressed="${S.reportView === 'screen'}">画面で確認</button>
@@ -1281,15 +1293,16 @@ function reportA4(d){
         <div class="kpi"><span>点検完了 <b>${d.done}</b>/${d.sums.length}か所</span><span>不具合 <b>${d.list.length}</b>件（新規 <b>${nNew}</b>・継続 ${d.list.length - nNew}）</span><span>× <b>${d.list.filter(x => x.mark === 'major').length}</b></span><span>△ <b>${d.list.filter(x => x.mark === 'minor').length}</b></span></div>
         ${d.notDone.length ? `<div class="sm">未完了：${d.tp.length ? d.tp.filter(x => x.left.length).map(x => h(x.t.name) + '（' + x.left.map(y => h(y.p.name)).join('、') + '）').join('　') + (un.length ? '　割り当てなし（' + un.map(p => h(p.name)).join('、') + '）' : '') : d.notDone.map(x => h(x.p.name)).join('、')}</div>` : ''}
       </div>
-      <table class="stamp"><tr><th>校長</th><th>教頭</th><th>教務主任</th><th>文書事務<br>取扱主任</th><th>安全点検係</th></tr><tr><td></td><td></td><td></td><td></td><td></td></tr></table>
+      <div class="stampwrap"><div class="kian">起案　令和　　　年　　　月　　　日</div>
+      <table class="stamp"><tr><th>校長</th><th>教頭</th><th>教務主任</th><th>文書事務<br>取扱主任</th><th>安全点検係</th></tr><tr><td></td><td></td><td></td><td></td><td></td></tr></table></div>
     </div>
-    <h4>1．不具合の一覧　<span class="hint">右の欄に所見・指示をご記入ください。前回と変わらなければ「〃」でかまいません。</span></h4>
+    <h4>1．不具合の一覧</h4>
     ${d.list.length ? `<table class="a4t"><colgroup><col style="width:3%"><col style="width:4.5%"><col style="width:3%"><col style="width:20%"><col style="width:21.5%"><col style="width:17%"><col style="width:31%"></colgroup>
-      <thead><tr><th class="c">番号</th><th class="c">区分</th><th class="c">判定</th><th>場所・点検項目</th><th>状況（点検した班）</th><th>これまでの所見・指示</th><th>所見・指示（ご記入ください）</th></tr></thead>
+      <thead><tr><th class="c">番号</th><th class="c">区分</th><th class="c">判定</th><th>場所・点検項目</th><th>状況（点検した班）</th><th>これまでの所見・指示</th><th>所見・指示</th></tr></thead>
       <tbody>${rows}</tbody></table>` : '<p class="none">不具合はありません。</p>'}
     ${d.memos.length ? `<h4>2．点検項目以外で気付いたこと</h4>
       <table class="a4t"><colgroup><col style="width:3%"><col style="width:16%"><col style="width:50%"><col style="width:31%"></colgroup>
-      <thead><tr><th class="c">記号</th><th>場所</th><th>内容（点検した班）</th><th>所見・指示（ご記入ください）</th></tr></thead><tbody>${memoRows}</tbody></table>` : ''}
+      <thead><tr><th class="c">記号</th><th>場所</th><th>内容（点検した班）</th><th>所見・指示</th></tr></thead><tbody>${memoRows}</tbody></table>` : ''}
     <h4>${d.memos.length ? 3 : 2}．全体への所見・指示</h4>
     ${shoken ? `<div class="memo-box" style="height:auto;min-height:18mm;padding:2mm 2.5mm;white-space:pre-line">${h(shoken)}</div>` : '<div class="memo-box"></div>'}
   </article>`;
