@@ -223,6 +223,11 @@ button.cell:hover{background:var(--accent-soft)}
 .issue .note{margin-top:4px}
 .issue .who{font-size:12.5px;color:var(--muted);margin-top:4px}
 .issue .seg button{padding:6px 10px;font-size:13px}
+.seq{font-size:12px;font-weight:700;color:var(--muted);text-align:center;margin-bottom:4px}
+.tag{display:inline-block;font-size:12px;font-weight:700;border-radius:6px;padding:0 7px;margin-right:8px;background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+.tag.new{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.cmt{margin-top:10px;padding:10px;border-radius:10px;background:var(--surface-2);display:flex;flex-direction:column;gap:6px}
+.cmt .prev{margin:0}
 .empty{padding:16px;border:1px dashed var(--line-strong);border-radius:12px;color:var(--muted);text-align:center;background:var(--surface)}
 
 /* A4 報告書（紙の見た目で固定） */
@@ -246,7 +251,14 @@ button.cell:hover{background:var(--accent-soft)}
 .a4t .c{text-align:center;white-space:nowrap}
 .a4t .sym{font-weight:700;font-size:10pt}
 .a4 .none{color:#555;font-size:9pt;margin:0}
-.a4 .memo-box{border:0.6pt solid #333;height:26mm;margin-top:1mm}
+.a4 .memo-box{border:0.6pt solid #333;height:22mm;margin-top:1mm}
+.a4.land{width:297mm;min-height:210mm;padding:10mm 11mm}
+.a4 .sm{font-size:7.8pt;color:#333;line-height:1.35;margin-top:0.6mm}
+.a4 .since{font-size:7.5pt;color:#444}
+.a4 .hint{font-size:8.5pt;font-weight:400;margin-left:3mm}
+.a4t td.write{height:13mm;font-size:9pt}
+.a4t tr.isnew td:nth-child(2){background:#F1F1F1}
+.a4 .kpi{margin:1.5mm 0 1mm}
 
 /* 使い方 */
 .help{max-width:760px}
@@ -328,7 +340,7 @@ button.cell:hover{background:var(--accent-soft)}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 @media print{
-  @page{size:A4 portrait;margin:10mm}
+  @page{size:A4 landscape;margin:8mm}
   .top,.noprint,.toast{display:none!important}
   body{background:#fff;color:#000;font-size:10.5pt}
   main{padding:0!important}
@@ -616,7 +628,11 @@ function expandSeed(seed){
       records['r' + year + '_' + place.id + '_' + per] = r;
     }
   }
-  return {config:Object.assign(clone(S.config), {seedImported:seed.version || 'v1'}), records};
+  for (const per in (seed.reports || {})){
+    const pinfo = PERIOD_BY_ID[per]; if (!pinfo) continue;
+    records['r' + year + '__report_' + per] = {year, placeId:'_report', period:per, placeName:'【所見・指示】', periodLabel:pinfo.label,
+      kind:'report', memo:seed.reports[per], source:'紙の詳細報告から取り込み', updatedAt:stamp, seededAt:stamp};
+  }  return {config:Object.assign(clone(S.config), {seedImported:seed.version || 'v1'}), records};
 }
 
 /* ---- storage adapters ---- */
@@ -677,13 +693,22 @@ function makeGasStore(){
       if (d.unchanged){ cb.ok(); return; }
       if (started < lastWrite) return;
       rev = d.rev; S.seedVersion = d.seedVersion || '';
+      S.fromCache = false;
       cb.config(d.config); cb.records(d.records || {});
+      saveCache(d);
     } catch(e){ cb.error(); }
   }
+  /* 前回読み込んだ内容を端末に覚えておき、次に開いたときすぐ表示する */
+  const CK = 'anzen-cache-' + API_URL.slice(-12);
+  function saveCache(d){ try { localStorage.setItem(CK, JSON.stringify({year:S.year, config:d.config, records:d.records, seedVersion:d.seedVersion || '', at:Date.now()})); } catch(e){} }
+  function loadCache(){ try { const c = JSON.parse(localStorage.getItem(CK)); return c && c.year === S.year ? c : null; } catch(e){ return null; } }
   return {
     mode: 'gas',
     async start(c){
-      cb = c; await pull(true);
+      cb = c;
+      const cached = loadCache();
+      if (cached){ S.fromCache = true; S.seedVersion = cached.seedVersion; cb.config(cached.config); cb.records(cached.records || {}); setSync('loading'); }
+      await pull(true);
       setInterval(() => { if (!document.hidden) pull(); }, 15000);
       document.addEventListener('visibilitychange', () => { if (!document.hidden) pull(); });
     },
@@ -772,7 +797,7 @@ window.addEventListener('beforeunload', e => { if (pendingCount() || settingsDir
 function setSync(s){
   S.sync = s;
   const el = $('#sync');
-  const txt = {loading:'読み込み中…', saving:'保存中…', saved:S.mode === 'local' ? '保存済み（この端末のみ）' : '保存済み', error:'未保存・再送中'}[s] || '';
+  const txt = {loading:S.fromCache ? '最新の状態を確認中…' : '読み込み中…', saving:'保存中…', saved:S.mode === 'local' ? '保存済み（この端末のみ）' : '保存済み', error:'未保存・再送中'}[s] || '';
   el.className = 'sync ' + s;
   el.querySelector('span').textContent = txt;
 }
@@ -968,8 +993,10 @@ function viewPlace(){
     const m = marks[it.id] || '';
     const bad = m === 'minor' || m === 'major';
     const pmk = pm[it.id];
-    const prevLine = (pmk === 'minor' || pmk === 'major')
-      ? `<div class="prev">前回（${h(prev.period.label)}）<b class="${pmk}">${MARK[pmk].sym}</b> ${h(pn[it.id] || '記入なし')}</div>` : '';
+    const lc = lastComment(place.id, it.id, S.period, true);
+    const cmtLine = lc ? `<div class="prev">所見・指示（${h(lc.per.label)}）：<b>${h(cmtText(lc.c))}</b></div>` : '';
+    const prevLine = cmtLine + ((pmk === 'minor' || pmk === 'major')
+      ? `<div class="prev">前回（${h(prev.period.label)}）<b class="${pmk}">${MARK[pmk].sym}</b> ${h(pn[it.id] || '記入なし')}</div>` : '');
     const btns = ['ok','minor','major'].map(k =>
       `<button class="mk ${k}${m === k ? ' on' : ''}" data-act="mark" data-item="${h(it.id)}" data-mark="${k}" aria-pressed="${m === k}" aria-label="No.${h(it.no)} ${MARK[k].label}"${dis}>${MARK[k].sym}</button>`).join('');
     let detail = '';
@@ -1080,20 +1107,75 @@ function openElsewhere(period){
   return out;
 }
 function whoLine(r){ return [teamLabel(r), fmtDate(r.date)].filter(Boolean).join('　'); }
-function issueCard(x, showPeriod){
+function issueCard(x){
   const dis = !S.loaded ? ' disabled' : '';
   return `<div class="issue">
-    <div class="sev ${x.mark}" aria-label="${MARK[x.mark].label}">${MARK[x.mark].sym}</div>
+    <div><div class="seq num">${x.seq}</div><div class="sev ${x.mark}" aria-label="${MARK[x.mark].label}">${MARK[x.mark].sym}</div></div>
     <div>
-      <div class="where"><button data-act="goto" data-place="${h(x.place.id)}" data-period="${x.period}">${h(x.place.name)}</button>${showPeriod ? `　<span class="muted" style="font-weight:400">${h(PERIOD_BY_ID[x.period].label)}</span>` : ''}</div>
+      <div class="where"><span class="tag ${x.isNew ? 'new' : ''}">${x.isNew ? '新規' : '継続'}</span><button data-act="goto" data-place="${h(x.place.id)}" data-period="${x.period}">${h(x.place.name)}</button>${!x.cur ? `　<span class="muted" style="font-weight:400">${h(PERIOD_BY_ID[x.period].label)}の点検</span>` : ''}${x.since && !x.isNew ? `　<span class="muted" style="font-weight:400;font-size:13px">${h(x.since.label)}から</span>` : ''}</div>
       <div class="what">No.${h(x.it.no)}　${h(x.it.text)}</div>
       <div class="note">${x.note ? h(x.note) : '<span class="muted">（内容未記入）</span>'}</div>
       <div class="who">${h(whoLine(x.r))}</div>
+      ${cmtEditor(x.place.id, x.period, x.it.id, cmtOf(x.r, x.it.id), x.cur ? x.prevCmt : null)}
     </div>
     <div class="seg" role="group" aria-label="対応状況">
       <button data-act="rstatus" data-place="${h(x.place.id)}" data-period="${x.period}" data-item="${h(x.it.id)}" data-val="open" aria-pressed="${!x.done}"${dis}>未対応</button>
       <button data-act="rstatus" data-place="${h(x.place.id)}" data-period="${x.period}" data-item="${h(x.it.id)}" data-val="done" aria-pressed="${x.done}"${dis}>対応済</button>
     </div></div>`;
+}/* ---- 所見・指示（不具合1件ごと。回議の後に係が書き写す） ---- */
+const WHO = ['事務長','教頭','校長'];
+const CMT_PHRASES = ['様子を見る','修理を依頼する','業者に連絡する','予算要求する','使用禁止を続ける','対応済みを確認'];
+const cmtOf = (r, id) => (r && r.comments && r.comments[id] && r.comments[id].text) ? r.comments[id] : null;
+function lastComment(placeId, itemId, period, inclusive){
+  const idx = PERIODS.findIndex(p => p.id === period);
+  for (let i = inclusive ? idx : idx - 1; i >= 0; i--){
+    const c = cmtOf(S.records[recKey(placeId, PERIODS[i].id)], itemId);
+    if (c) return {c, per:PERIODS[i]};
+  }
+  return null;
+}
+function firstSeen(placeId, itemId, period){
+  const idx = PERIODS.findIndex(p => p.id === period);
+  let first = null;
+  for (let i = idx; i >= 0; i--){
+    const r = S.records[recKey(placeId, PERIODS[i].id)];
+    const m = r && r.marks && r.marks[itemId];
+    if (m === 'minor' || m === 'major') first = PERIODS[i];
+    else if (m === 'ok') break;
+  }
+  return first;
+}
+const cmtText = (c) => c ? (c.by ? c.by + '：' : '') + c.text : '';
+/* 今月の不具合＋以前から未対応のものを、新規→継続、×→△ の順に並べ、通し番号を付ける */
+function reportIssues(period){
+  const list = collectIssues(period).map(x => Object.assign(x, {cur:true}))
+    .concat(openElsewhere(period).map(x => Object.assign(x, {cur:false})));
+  list.forEach(x => {
+    const f = firstSeen(x.place.id, x.it.id, x.period);
+    x.isNew = x.cur && (!f || f.id === period);
+    x.since = f;
+    x.prevCmt = lastComment(x.place.id, x.it.id, x.period, !x.cur);
+  });
+  const rank = (x) => (x.isNew ? 0 : 2) + (x.mark === 'major' ? 0 : 1);
+  list.sort((a, b) => rank(a) - rank(b));
+  list.forEach((x, i) => { x.seq = i + 1; });
+  return list;
+}
+function cmtEditor(placeId, period, itemId, cur, prev){
+  const dis = !S.loaded ? ' disabled' : '';
+  const by = cur && cur.by || '';
+  const a = `data-place="${h(placeId)}" data-period="${period}" data-item="${h(itemId)}"`;
+  return `<div class="cmt">
+    ${prev ? `<div class="prev">これまでの所見・指示（${h(prev.per.label)}）：${h(cmtText(prev.c))}</div>` : ''}
+    <div class="chips"><span class="lbl">誰の指示</span>${WHO.map(w => `<button class="chip${by === w ? ' on' : ''}" data-act="cby" ${a} data-v="${w}"${dis}>${w}</button>`).join('')}</div>
+    <div class="chips"><span class="lbl">よく使う</span>${CMT_PHRASES.map(w => `<button class="chip" data-act="cphrase" ${a} data-v="${h(w)}"${dis}>${h(w)}</button>`).join('')}${prev ? `<button class="chip prevc" data-act="csame" ${a}${dis}>前回と同じ</button>` : ''}</div>
+    <input class="input" type="text" enterkeyhint="done" placeholder="所見・指示（紙に書かれた内容を入力）" aria-label="所見・指示" data-field="cmt" ${a} value="${h(cur ? cur.text : '')}"${dis}>
+  </div>`;
+}
+function patchCmt(placeId, period, itemId, part){
+  const r = S.records[recKey(placeId, period)] || {};
+  const cur = (r.comments && r.comments[itemId]) || {};
+  patchRecord(placeId, period, {comments:{[itemId]: Object.assign({}, cur, part)}});
 }
 function teamProgress(period){
   return S.config.teams.map(t => {
@@ -1114,7 +1196,8 @@ function reportData(period){
     open: issues.filter(x => !x.done).length, others: openElsewhere(period),
     memos: sums.filter(x => x.s.r && x.s.r.memo && x.s.r.memo.trim()),
     notDone: sums.filter(x => x.s.state !== 'done'), tp: teamProgress(period),
-    from: dates[0], to: dates[dates.length - 1]
+    from: dates[0], to: dates[dates.length - 1],
+    list: reportIssues(period)
   };
 }
 function viewReport(){
@@ -1127,7 +1210,7 @@ function viewReport(){
       </div>
       ${S.reportView === 'a4' ? '<button class="btn primary" data-act="print">印刷する</button>' : ''}
     </div></div>`;
-  if (S.reportView === 'a4') return `${topBanner()}${toggle}<p class="muted noprint" style="font-size:13.5px;margin-top:-4px">印刷の画面で用紙を「A4・縦」にしてください。</p><div class="a4wrap">${reportA4(d)}</div>`;
+  if (S.reportView === 'a4') return `${topBanner()}${toggle}<p class="muted noprint" style="font-size:13.5px;margin-top:-4px">印刷の画面で用紙を「A4・横」にしてください。</p><div class="a4wrap">${reportA4(d)}</div>`;
 
   const gridHead = PERIODS.map(p => `<th class="num">${h(p.label)}</th>`).join('');
   const gridBody = S.places.map(p => `<tr><td class="lft" style="white-space:normal;min-width:11em;text-align:left">${h(p.n)}．${h(p.name)}</td>${
@@ -1155,56 +1238,62 @@ function viewReport(){
       <div class="pill-set">${x.major ? `<span class="pill major num">× ${x.major}</span>` : ''}${x.minor ? `<span class="pill minor num">△ ${x.minor}</span>` : ''}${!x.major && !x.minor ? '<span class="pill">異常なし</span>' : ''}</div>
       ${x.left.length && x.left.length < x.ps.length ? `<div class="left">${x.left.map(y => `<button class="chip" data-act="goto" data-place="${h(y.p.id)}" data-period="${S.period}">${h(y.p.name)}${y.s.state === 'partial' ? `（${y.s.marked}/${y.s.total}）` : ''}</button>`).join('')}</div>` : ''}
     </div>`).join('')}</div>` : ''}
-  <h3 class="sub"><span class="sev major" style="width:26px;height:26px;font-size:15px">×</span>要修理・交換</h3>
-  ${d.maj.length ? `<div class="issues">${d.maj.map(x => issueCard(x)).join('')}</div>` : '<div class="empty">ありません</div>'}
-  <h3 class="sub"><span class="sev minor" style="width:26px;height:26px;font-size:15px">△</span>軽度の異常</h3>
-  ${d.min.length ? `<div class="issues">${d.min.map(x => issueCard(x)).join('')}</div>` : '<div class="empty">ありません</div>'}
+  <h3 class="sub">不具合の一覧と所見・指示</h3>
+  <p class="muted" style="font-size:13.5px;margin:-4px 0 10px">報告書（A4）と同じ番号・同じ順です。回議の後、管理職等が紙に書いた所見・指示を、番号を見ながらここに書き写します。</p>
+  ${d.list.length ? `<div class="issues">${d.list.map(x => issueCard(x)).join('')}</div>` : '<div class="empty">ありません</div>'}
   <h3 class="sub">点検項目以外で気付いたこと</h3>
-  ${d.memos.length ? `<div class="issues">${d.memos.map(x => `<div class="issue" style="grid-template-columns:1fr"><div><div class="where"><button data-act="goto" data-place="${h(x.p.id)}" data-period="${S.period}">${h(x.p.name)}</button></div><div class="note" style="white-space:pre-line">${h(x.s.r.memo.trim())}</div><div class="who">${h(whoLine(x.s.r))}</div></div></div>`).join('')}</div>` : '<div class="empty">ありません</div>'}
-  ${d.others.length ? `<h3 class="sub">以前の点検で未対応のもの</h3><div class="issues">${d.others.map(x => issueCard(x, true)).join('')}</div>` : ''}
-  <h3 class="sub">所見・指示</h3>
+  ${d.memos.length ? `<div class="issues">${d.memos.map((x, i) => `<div class="issue" style="grid-template-columns:auto 1fr"><div class="seq num">${String.fromCharCode(65 + i)}</div><div><div class="where"><button data-act="goto" data-place="${h(x.p.id)}" data-period="${S.period}">${h(x.p.name)}</button></div><div class="note" style="white-space:pre-line">${h(x.s.r.memo.trim())}</div><div class="who">${h(whoLine(x.s.r))}</div>${cmtEditor(x.p.id, S.period, '_memo', cmtOf(x.s.r, '_memo'), null)}</div></div>`).join('')}</div>` : '<div class="empty">ありません</div>'}  <h3 class="sub">全体への所見・指示</h3>
   <div class="memo" style="margin-top:0">
-    <div class="muted" style="font-size:13.5px;margin-bottom:8px">回議で管理職が報告書に書いた所見・指示を、安全点検係が入力します。入力した内容は報告書（A4）の「所見・指示」欄に印刷されます。</div>
+    <div class="muted" style="font-size:13.5px;margin-bottom:8px">不具合1件ごとではない、全体への所見・指示があれば入力します。報告書（A4）の最後の欄に印刷されます。</div>
     <textarea class="input" id="f-shoken" data-field="shoken" rows="4" placeholder="例：3階東廊下の床の浮きは、業者に修理を依頼すること。（10/3 校長）"${S.loaded ? '' : ' disabled'}>${h(getShoken(S.period))}</textarea>
   </div>  <h3 class="sub">年間の実施状況</h3>
   <div class="legend" style="margin-top:0"><span><b class="s-ok">✓</b> 異常なし</span><span><b class="s-minor">△</b> 軽度あり</span><span><b class="s-major">×</b> 修理・交換あり</span><span><b>5/20</b> 点検途中（入力済み／項目数）</span><span><b>・</b> 未点検</span></div>
   <div class="tablewrap"><table class="grid"><thead><tr><th class="lft" style="text-align:left">場所</th>${gridHead}</tr></thead><tbody>${gridBody}</tbody></table></div>`;
 }
-/* A4 報告書 */
+/* A4 報告書（横）：不具合1件ごとに所見・指示の記入欄 */
 function reportA4(d){
   const today = new Date();
   const range = d.from ? (d.from === d.to ? fmtDate(d.from) : fmtDate(d.from) + '〜' + fmtDate(d.to)) : '―';
-  const issueRows = (list, showPer) => list.map(x => `<tr>
-      <td>${h(x.place.name)}${showPer ? `<br><span style="font-size:8pt">（${h(PERIOD_BY_ID[x.period].label)}）</span>` : ''}</td>
-      <td class="c num">${h(x.it.no)}</td><td>${h(x.it.text)}</td><td>${x.note ? h(x.note) : '（内容未記入）'}</td>
-      <td class="c">${x.done ? '対応済' : '未対応'}</td><td class="c" style="font-size:8pt">${h(teamLabel(x.r))}<br>${h(fmtDate(x.r.date))}</td></tr>`).join('');
-  const issueTable = (list, showPer) => list.length ? `<table class="a4t"><colgroup><col style="width:21%"><col style="width:5%"><col style="width:29%"><col style="width:27%"><col style="width:7%"><col style="width:11%"></colgroup>
-      <thead><tr><th>場所</th><th class="c">No.</th><th>点検項目</th><th>状況・内容</th><th class="c">対応</th><th class="c">班・日付</th></tr></thead><tbody>${issueRows(list, showPer)}</tbody></table>` : '<p class="none">ありません。</p>';
   const un = placesFor(unassignedPlaces(), S.period).filter(p => summarize(p, S.period).state !== 'done');
-  let sec = 0; const H = (t) => `<h4>${++sec}．${t}</h4>`;
-  return `<article class="a4">
+  const nNew = d.list.filter(x => x.isNew).length;
+  const prevCell = (x) => {
+    const bits = [];
+    if (x.since && !x.isNew) bits.push(`<span class="since">${h(x.since.label)}から</span>`);
+    if (x.prevCmt) bits.push(h(cmtText(x.prevCmt.c)) + `<span class="since">（${h(x.prevCmt.per.label)}）</span>`);
+    return bits.join('<br>') || '―';
+  };
+  const rows = d.list.map(x => `<tr class="${x.isNew ? 'isnew' : ''}">
+      <td class="c num">${x.seq}</td>
+      <td class="c">${x.isNew ? '<b>新規</b>' : '継続'}</td>
+      <td class="c sym">${MARK[x.mark].sym}</td>
+      <td><b>${h(x.place.name)}</b><div class="sm">No.${h(x.it.no)} ${h(x.it.text)}</div></td>
+      <td>${x.note ? h(x.note) : '（内容未記入）'}${x.done ? '<div class="sm"><b>［対応済］</b></div>' : ''}<div class="sm">${h(teamLabel(x.r))} ${h(fmtDate(x.r.date))}${!x.cur ? '（' + h(PERIOD_BY_ID[x.period].label) + 'の点検）' : ''}</div></td>
+      <td class="sm">${prevCell(x)}</td>
+      <td class="write">${x.cur && cmtOf(x.r, x.it.id) ? h(cmtText(cmtOf(x.r, x.it.id))) : ''}</td></tr>`).join('');
+  const memoRows = d.memos.map((x, i) => `<tr><td class="c">${String.fromCharCode(65 + i)}</td><td><b>${h(x.p.name)}</b></td>
+      <td style="white-space:pre-line">${h(x.s.r.memo.trim())}<div class="sm">${h(teamLabel(x.s.r))} ${h(fmtDate(x.s.r.date))}</div></td>
+      <td class="write">${cmtOf(x.s.r, '_memo') ? h(cmtText(cmtOf(x.s.r, '_memo'))) : ''}</td></tr>`).join('');
+  const shoken = getShoken(S.period).trim();
+  return `<article class="a4 land">
     <div class="a4-head">
-      <div><div class="a4-title">令和${S.year}年度　安全点検報告書</div>
-        <div class="a4-sub">${h(d.per.label)}　${d.per.tmp ? '臨時点検' : '定期点検'}　／　点検日 ${h(range)}　／　作成日 ${today.getMonth() + 1}/${today.getDate()}</div></div>
+      <div><div class="a4-title">令和${S.year}年度　安全点検報告書（${h(d.per.label)}）</div>
+        <div class="a4-sub">${d.per.tmp ? '臨時点検' : '定期点検'}　／　点検日 ${h(range)}　／　作成日 ${today.getMonth() + 1}/${today.getDate()}</div>
+        <div class="kpi"><span>点検完了 <b>${d.done}</b>/${d.sums.length}か所</span><span>不具合 <b>${d.list.length}</b>件（新規 <b>${nNew}</b>・継続 ${d.list.length - nNew}）</span><span>× <b>${d.list.filter(x => x.mark === 'major').length}</b></span><span>△ <b>${d.list.filter(x => x.mark === 'minor').length}</b></span></div>
+        ${d.notDone.length ? `<div class="sm">未完了：${d.tp.length ? d.tp.filter(x => x.left.length).map(x => h(x.t.name) + '（' + x.left.map(y => h(y.p.name)).join('、') + '）').join('　') + (un.length ? '　割り当てなし（' + un.map(p => h(p.name)).join('、') + '）' : '') : d.notDone.map(x => h(x.p.name)).join('、')}</div>` : ''}
+      </div>
       <table class="stamp"><tr><th>校長</th><th>教頭</th><th>教務主任</th><th>文書事務<br>取扱主任</th><th>安全点検係</th></tr><tr><td></td><td></td><td></td><td></td><td></td></tr></table>
     </div>
-    ${H('実施状況')}
-    <div class="kpi"><span>点検完了 <b>${d.done}</b> / ${d.sums.length} か所</span><span>× 修理・交換 <b>${d.maj.length}</b> 件</span><span>△ 軽度 <b>${d.min.length}</b> 件</span><span>未対応 <b>${d.open + d.others.length}</b> 件</span></div>
-    ${d.tp.length ? `<table class="a4t"><colgroup><col style="width:24%"><col style="width:9%"><col style="width:7%"><col style="width:7%"><col style="width:53%"></colgroup>
-      <thead><tr><th>班</th><th class="c">完了</th><th class="c">×</th><th class="c">△</th><th>未完了の場所</th></tr></thead><tbody>
-      ${d.tp.map(x => `<tr><td>${h(x.t.name)}</td><td class="c num">${x.done}/${x.ps.length}</td><td class="c num">${x.major || ''}</td><td class="c num">${x.minor || ''}</td><td>${x.left.length ? x.left.map(y => h(y.p.name) + (y.s.state === 'partial' ? '（途中）' : '')).join('、') : '―'}</td></tr>`).join('')}
-      ${un.length ? `<tr><td>班の割り当てなし</td><td class="c">―</td><td></td><td></td><td>${un.map(p => h(p.name)).join('、')}</td></tr>` : ''}
-      </tbody></table>` : (d.notDone.length ? `<p>未完了：${d.notDone.map(x => h(x.p.name)).join('、')}</p>` : '')}
-    ${H('要修理・交換（×）')}${issueTable(d.maj)}
-    ${H('軽度の異常（△）')}${issueTable(d.min)}
-    ${H('点検項目以外で気付いたこと')}
-    ${d.memos.length ? `<table class="a4t"><colgroup><col style="width:22%"><col style="width:64%"><col style="width:14%"></colgroup><thead><tr><th>場所</th><th>内容</th><th class="c">班・日付</th></tr></thead><tbody>
-      ${d.memos.map(x => `<tr><td>${h(x.p.name)}</td><td style="white-space:pre-line">${h(x.s.r.memo.trim())}</td><td class="c" style="font-size:8pt">${h(teamLabel(x.s.r))}<br>${h(fmtDate(x.s.r.date))}</td></tr>`).join('')}</tbody></table>` : '<p class="none">ありません。</p>'}
-    ${d.others.length ? H('以前の点検で見つかり、未対応のもの') + issueTable(d.others, true) : ''}
-    ${H('所見・指示')}${getShoken(S.period).trim() ? `<div class="memo-box" style="height:auto;min-height:26mm;padding:2mm 2.5mm;white-space:pre-line">${h(getShoken(S.period).trim())}</div>` : '<div class="memo-box"></div>'}
+    <h4>1．不具合の一覧　<span class="hint">右の欄に所見・指示をご記入ください。前回と変わらなければ「〃」でかまいません。</span></h4>
+    ${d.list.length ? `<table class="a4t"><colgroup><col style="width:3%"><col style="width:4.5%"><col style="width:3%"><col style="width:20%"><col style="width:21.5%"><col style="width:17%"><col style="width:31%"></colgroup>
+      <thead><tr><th class="c">番号</th><th class="c">区分</th><th class="c">判定</th><th>場所・点検項目</th><th>状況（点検した班）</th><th>これまでの所見・指示</th><th>所見・指示（ご記入ください）</th></tr></thead>
+      <tbody>${rows}</tbody></table>` : '<p class="none">不具合はありません。</p>'}
+    ${d.memos.length ? `<h4>2．点検項目以外で気付いたこと</h4>
+      <table class="a4t"><colgroup><col style="width:3%"><col style="width:16%"><col style="width:50%"><col style="width:31%"></colgroup>
+      <thead><tr><th class="c">記号</th><th>場所</th><th>内容（点検した班）</th><th>所見・指示（ご記入ください）</th></tr></thead><tbody>${memoRows}</tbody></table>` : ''}
+    <h4>${d.memos.length ? 3 : 2}．全体への所見・指示</h4>
+    ${shoken ? `<div class="memo-box" style="height:auto;min-height:18mm;padding:2mm 2.5mm;white-space:pre-line">${h(shoken)}</div>` : '<div class="memo-box"></div>'}
   </article>`;
 }
-
 /* ---- 使い方（先生方向けマニュアル） ---- */
 function viewHelp(){
   const S1 = [
@@ -1233,8 +1322,9 @@ function viewHelp(){
     ['report','報告・確認（管理職・安全点検係）', `<ul>
       <li>「報告・確認」タブで月を選ぶと、点検の完了数、× と △ の一覧、班ごとの進み具合、年間の実施状況が見られます。</li>
       <li>一覧の場所名を押すと、その場所の記録を開けます。対応が済んだものは「対応済」に切り替えます。</li>
-      <li>回議で管理職が書いた所見・指示は、安全点検係が「報告・確認」の「<b>所見・指示</b>」欄に入力します。入力した内容は、次に印刷する報告書にも載ります。</li>
-      <li>「<b>報告書（A4）</b>」に切り替えて「印刷する」を押すと、押印欄（校長・教頭・教務主任・文書事務取扱主任・安全点検係）の付いた報告書を印刷できます（用紙はA4・縦）。</li></ul>`],
+      <li>報告書（A4・横）は、不具合1件ごとに番号と「所見・指示」の記入欄があります。新規の不具合が先に並び、継続のものには前回の所見・指示が印刷されます。</li>
+      <li>回議の後、安全点検係は「報告・確認」の不具合の一覧で、紙と同じ番号の所に所見・指示を書き写します（「誰の指示」と「よく使う」のボタンが使えます）。書き写した内容は、翌月の報告書と、その場所を点検する班の画面にも表示されます。</li>
+      <li>「<b>報告書（A4）</b>」に切り替えて「印刷する」を押すと、押印欄の付いた報告書を印刷できます（用紙はA4・横）。</li></ul>`],
     ['settings','設定（安全点検係）', `<ul>
       <li>班と担当箇所、点検箇所、点検項目、定型文、年度を変えられます。</li>
       <li>担当箇所の追加・削除は「設定」→「班と担当箇所」で行います（回る順は各班が「点検する」の画面で変えられます）。</li>
@@ -1418,7 +1508,7 @@ function setOther(c, dis){
   <div class="card"><h3>年度</h3>    <p>年度を変えると、その年度の記録に切り替わります（前の年度の記録は残ります）。</p>
     <div style="display:flex;align-items:center;gap:8px">令和 <input class="input num" type="number" min="1" max="99" value="${c.year}" data-e="year" style="width:90px"${dis}> 年度</div></div>
   ${seedReady() ? `<div class="card" style="border-color:var(--accent)"><h3>紙の記録を取り込む</h3>
-    <p>紙に記録した4月〜9月の点検結果を取り込みます。1回だけ行ってください。アプリで入力・修正した記録は上書きしません。</p>
+    <p>紙に記録した4月〜9月の点検結果と、回議済みの詳細報告（所見・指示）を取り込みます。1回だけ行ってください。アプリで入力・修正した記録は上書きしません。</p>
     <button class="btn primary" data-act="import-seed"${dis}>${S.importing ? '取り込み中…' : '紙の記録を取り込む'}</button></div>` : ''}
 `;
 }
@@ -1495,6 +1585,9 @@ document.addEventListener('click', e => {
     patchRecord(S.placeId, S.period, {memo: cur ? cur + '\n' + prev.r.memo : prev.r.memo}); render(true);
   }
   else if (a === 'status'){ patchRecord(S.placeId, S.period, {status:{[b.dataset.item]: b.dataset.val}}); render(true); }
+  else if (a === 'cby'){ const r = S.records[recKey(b.dataset.place, b.dataset.period)] || {}; const cur = (r.comments || {})[b.dataset.item] || {}; patchCmt(b.dataset.place, b.dataset.period, b.dataset.item, {by: cur.by === b.dataset.v ? '' : b.dataset.v}); render(true); }
+  else if (a === 'cphrase'){ const r = S.records[recKey(b.dataset.place, b.dataset.period)] || {}; const cur = ((r.comments || {})[b.dataset.item] || {}).text || ''; patchCmt(b.dataset.place, b.dataset.period, b.dataset.item, {text: cur ? cur + '。' + b.dataset.v : b.dataset.v}); render(true); }
+  else if (a === 'csame'){ const pc = lastComment(b.dataset.place, b.dataset.item, b.dataset.period, false); if (pc) patchCmt(b.dataset.place, b.dataset.period, b.dataset.item, {text: pc.c.text, by: pc.c.by || ''}); render(true); }
   else if (a === 'rstatus'){ patchRecord(b.dataset.place, b.dataset.period, {status:{[b.dataset.item]: b.dataset.val}}); render(true); }
   else if (a === 'annual'){ S.annual = !S.annual; render(true); }
   else if (a === 'reorder'){ const tm = currentTeam(); if (!tm) return; S.reorder = tm.places.filter(pid => placeById(pid)); render(true); window.scrollTo(0, 0); }
@@ -1609,6 +1702,7 @@ document.addEventListener('input', e => {
   if (el.dataset.e && el.tagName !== 'SELECT'){ draftInput(el); return; }
   const f = el.dataset.field;
   if (f === 'shoken'){ patchShoken(S.period, el.value); return; }
+  if (f === 'cmt'){ patchCmt(el.dataset.place, el.dataset.period, el.dataset.item, {text: el.value}); return; }
   if (!f || !S.placeId) return;
   if (f === 'note') patchRecord(S.placeId, S.period, {notes:{[el.dataset.item]: el.value}});
   else if (f === 'memo') patchRecord(S.placeId, S.period, {memo:el.value});
@@ -1626,10 +1720,10 @@ const callbacks = {
     S.places = buildPlaces(S.config);
     render();
   },
-  records(m){ S.server = m; S.loaded = true; S.loadFailed = false; recompute(); if (S.sync === 'loading' || S.sync === 'error') setSync(pendingCount() ? 'saving' : 'saved'); render(); },
+  records(m){ S.server = m; S.loaded = true; S.loadFailed = false; recompute(); if (!S.fromCache && (S.sync === 'loading' || S.sync === 'error')) setSync(pendingCount() ? 'saving' : 'saved'); render(); },
   one(k, r){ S.server[k] = r; recompute(); render(); },
   ok(){ if (S.sync === 'error' && !pendingCount()) setSync('saved'); },
-  error(){ setSync('error'); if (!S.loaded && !S.loadFailed){ S.loadFailed = true; render(); } }
+  error(){ if (S.fromCache){ S.sync = 'error'; const el = $('#sync'); el.className = 'sync error'; el.querySelector('span').textContent = '前回の内容を表示中（通信できません）'; return; } setSync('error'); if (!S.loaded && !S.loadFailed){ S.loadFailed = true; render(); } }
 };
 function boot(){
   store = (hasGoogleRun() || /^https:/.test(API_URL)) ? makeGasStore() : makeLocalStore();
