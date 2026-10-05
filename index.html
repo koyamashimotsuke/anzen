@@ -148,6 +148,7 @@ textarea.input{min-height:84px;resize:vertical;line-height:1.55}
 .allok{width:100%;min-height:56px;font-size:17px;border:2px solid var(--ok);color:var(--ok);background:var(--ok-soft);border-radius:12px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px}
 .allok:disabled{border-color:var(--line);color:var(--muted);background:var(--surface-2)}
 .allok .sym{font-size:22px}
+.allok.stick{position:sticky;top:calc(var(--top-h,120px) + var(--step-h,0px) + env(safe-area-inset-top,0px) + 6px);z-index:14;box-shadow:0 4px 12px rgba(18,28,56,.14)}
 .gjump{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0 0}
 
 .items{margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
@@ -274,8 +275,26 @@ button.cell:hover{background:var(--accent-soft)}
 .help section{scroll-margin-top:130px}/* 場所・設定・使い方のボタン列は、スクロールしても見出しの下に留める */
 .stepper,.subnav,.help .toc{position:sticky;top:calc(var(--top-h,120px) + env(safe-area-inset-top,0px));z-index:15;background:var(--bg);padding-block:8px;margin-inline:-4px;padding-inline:4px;box-shadow:0 6px 8px -8px rgba(0,0,0,.25)}
 .stepper{margin-bottom:10px}
-.grp,.help section,.item{scroll-margin-top:calc(var(--top-h,120px) + 70px)}.rbar{position:sticky;top:calc(var(--top-h,120px) + env(safe-area-inset-top,0px));z-index:15;background:var(--bg);padding-block:8px;margin-inline:-4px;padding-inline:4px;box-shadow:0 6px 8px -8px rgba(0,0,0,.25)}
-/* settings */
+.grp,.help section,.item{scroll-margin-top:calc(var(--top-h,120px) + var(--step-h,0px) + 80px)}.rbar{position:sticky;top:calc(var(--top-h,120px) + env(safe-area-inset-top,0px));z-index:15;background:var(--bg);padding-block:8px;margin-inline:-4px;padding-inline:4px;box-shadow:0 6px 8px -8px rgba(0,0,0,.25)}
+.prevbox{margin-top:8px;border-radius:9px;padding:8px 10px;border:1.5px solid var(--minor);background:var(--minor-soft)}
+.prevbox.major{border-color:var(--major);background:var(--major-soft)}
+.prevbox .ph{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--minor)}
+.prevbox.major .ph{color:var(--major)}
+.prevbox .psym,.prevpanel .psym{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:var(--minor);color:var(--on-sem);font-size:14px;font-weight:700;flex:0 0 22px}
+.prevbox.major .psym,.prevpanel .psym.major{background:var(--major)}
+.prevbox .pnote{margin-top:3px;font-size:15px;font-weight:700;color:var(--ink);line-height:1.45}
+.prevbox .pcmt{margin-top:3px;font-size:13px;color:var(--ink)}
+.pdone{font-size:12px;font-weight:700;border-radius:999px;padding:1px 8px;background:var(--ok);color:var(--on-sem);margin-left:auto}
+.prevpanel{background:var(--surface);border:2px solid var(--minor);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.prevpanel h3{margin:0 0 8px;font-size:15.5px;color:var(--minor)}
+.prevpanel ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.prevpanel li button{width:100%;display:flex;align-items:center;gap:10px;text-align:left;border:1px solid var(--line);background:var(--surface-2);border-radius:9px;padding:8px 10px;color:var(--ink)}
+.prevpanel .pno{font-weight:700;color:var(--muted);font-size:13.5px;flex:0 0 auto}
+.prevpanel .ptxt{flex:1;display:flex;flex-direction:column;line-height:1.4}
+.prevpanel .ptxt small{font-size:12.5px;color:var(--muted);font-weight:400}
+.prevpanel p{margin:8px 0 0;font-size:13px;color:var(--muted)}
+.pill.prevp{background:var(--minor-soft);color:var(--minor);border-color:var(--minor);margin-left:8px;padding:0 8px;font-size:12px}
+.item.flash{outline:3px solid var(--accent);outline-offset:-3px}/* settings */
 .subnav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
 .subnav button{border:1.5px solid var(--line-strong);background:var(--surface);border-radius:999px;padding:7px 14px;font-size:14.5px;font-weight:700;color:var(--muted)}
 .subnav button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
@@ -840,6 +859,8 @@ window.addEventListener('resize', fitA4);function render(force){
   else if (S.tab === 'help') v.innerHTML = viewHelp();
   else { v.innerHTML = viewSettings(); updateSaveBar(); }
   fitA4();
+  const stp = document.querySelector('.stepper');
+  document.documentElement.style.setProperty('--step-h', (stp ? stp.offsetHeight : 0) + 'px');
   const st = $('.stepper'), cur = st && st.querySelector('.on');
   if (cur) st.scrollLeft = cur.offsetLeft - st.clientWidth / 2 + cur.offsetWidth / 2;
 }
@@ -936,10 +957,11 @@ function viewList(){
    : shown.length ? `<div class="plist">${shown.map(({p, i, s}) => {
     const w = s.total ? Math.round(s.marked / s.total * 100) : 0;
     const meta = [t ? '点検表 ' + p.n : teamsOfPlace(p.id).map(x => x.name).join('・'), s.r ? fmtDate(s.r.date) : ''].filter(Boolean).join(' · ');
+    const pv = prevBad(p, prevRecord(p.id, S.period)).filter(x => !x.done);
     return `<button class="pcard st-${s.state}" data-act="open" data-place="${h(p.id)}">
       <span class="pnum${t ? ' step' : ''}">${t ? i + 1 : h(p.n)}</span><span class="pname">${h(p.name)}</span>
       <span class="pstat">${statusPill(s)}</span>
-      <span class="pmeta">${h(meta)}</span>
+      <span class="pmeta">${h(meta)}${pv.length ? `<span class="pill prevp">前回の異常 ${pv.length}件</span>` : ''}</span>
       <span class="pbar"><i style="width:${w}%"></i></span></button>`;
   }).join('')}</div>` : '<div class="empty">この月はすべての場所の点検が完了しています。</div>'}`;
 }
@@ -970,6 +992,20 @@ function chipsHTML(target, note, extra){
 }
 function navList(placeId){ const route = routePlaces(); return route.some(p => p.id === placeId) ? route : S.places; }
 
+/* 前回（先月まで）に異常があった項目の一覧。押すとその項目へ移動する */
+function prevBad(place, prev){
+  if (!prev) return [];
+  const pm = prev.r.marks || {}, pn = prev.r.notes || {}, ps = prev.r.status || {};
+  return place.items.filter(it => pm[it.id] === 'minor' || pm[it.id] === 'major')
+    .map(it => ({it, mark:pm[it.id], note:pn[it.id] || '', done:ps[it.id] === 'done'}));
+}
+function prevPanel(place, prev){
+  const list = prevBad(place, prev);
+  if (!list.length) return '';
+  return `<section class="prevpanel noprint"><h3>前回（${h(prev.period.label)}）に異常があった項目　${list.length}件</h3>
+    <ul>${list.map(x => `<li><button data-act="gotoitem" data-item="${h(x.it.id)}"><span class="psym ${x.mark}">${MARK[x.mark].sym}</span><span class="pno num">No.${h(x.it.no)}</span><span class="ptxt"><b>${h(x.note || x.it.text)}</b>${x.note ? `<small>${h(x.it.text)}</small>` : ''}</span>${x.done ? '<span class="pdone">対応済</span>' : ''}</button></li>`).join('')}</ul>
+    <p>今回も同じ状態なら、その項目で同じ判定を付け、「前回と同じ内容」を押してください。</p></section>`;
+}
 function viewPlace(){
   const place = placeById(S.placeId);
   if (!place){ S.placeId = null; return viewList(); }
@@ -1006,9 +1042,12 @@ function viewPlace(){
     const bad = m === 'minor' || m === 'major';
     const pmk = pm[it.id];
     const lc = lastComment(place.id, it.id, S.period, true);
-    const cmtLine = lc ? `<div class="prev">所見・指示（${h(lc.per.label)}）：<b>${h(cmtText(lc.c))}</b></div>` : '';
-    const prevLine = cmtLine + ((pmk === 'minor' || pmk === 'major')
-      ? `<div class="prev">前回（${h(prev.period.label)}）<b class="${pmk}">${MARK[pmk].sym}</b> ${h(pn[it.id] || '記入なし')}</div>` : '');
+    const pbad = (pmk === 'minor' || pmk === 'major');
+    const pdone = pbad && (prev.r.status || {})[it.id] === 'done';
+    const prevLine = pbad
+      ? `<div class="prevbox ${pmk}"><div class="ph"><span class="psym">${MARK[pmk].sym}</span>前回（${h(prev.period.label)}）は「${MARK[pmk].label}」${pdone ? '<span class="pdone">対応済</span>' : ''}</div>
+         <div class="pnote">${h(pn[it.id] || '（内容の記入なし）')}</div>${lc ? `<div class="pcmt">所見・指示（${h(lc.per.label)}）：${h(cmtText(lc.c))}</div>` : ''}</div>`
+      : (lc ? `<div class="prev">所見・指示（${h(lc.per.label)}）：<b>${h(cmtText(lc.c))}</b></div>` : '');
     const btns = ['ok','minor','major'].map(k =>
       `<button class="mk ${k}${m === k ? ' on' : ''}" data-act="mark" data-item="${h(it.id)}" data-mark="${k}" aria-pressed="${m === k}" aria-label="No.${h(it.no)} ${MARK[k].label}"${dis}>${MARK[k].sym}</button>`).join('');
     let detail = '';
@@ -1038,6 +1077,7 @@ function viewPlace(){
     <div><div class="when">点検表 ${h(place.n)}　${h(per.label)}の点検${per.tmp ? '（臨時点検）' : '（定期点検）'}${t && nav !== S.places ? `　${idx + 1} / ${nav.length} か所目` : ''}</div><h2>${h(place.name)}</h2></div>
     <div>${statusPill(sum)}</div>
   </div>
+  ${prevPanel(place, prev)}
   <div class="meta-grid">
     <div class="field"><label for="f-date">点検日</label><input class="input" id="f-date" type="date" data-field="date" value="${h(r.date || todayISO())}"${dis}></div>
     <div class="field"><label for="f-team">点検班</label><select class="input" id="f-team" data-field="team"${dis}>
@@ -1046,7 +1086,7 @@ function viewPlace(){
       ${r.team && !teamById(r.team) && r.teamName ? `<option value="${h(r.team)}" selected>${h(r.teamName)}</option>` : ''}
     </select></div>
   </div>
-  <button class="allok noprint" data-act="allok"${unmarked && !dis ? '' : ' disabled'}>
+  <button class="allok noprint${unmarked ? ' stick' : ''}" data-act="allok"${unmarked && !dis ? '' : ' disabled'}>
     ${unmarked ? `<span class="sym">✓</span> 残り${unmarked}項目をすべて「異常なし」にする` : '全項目の入力が済んでいます'}
   </button>
   <div class="legend"><span><b class="s-ok">✓</b> 異常なし</span><span><b class="s-minor">△</b> 異常あり（軽度）</span><span><b class="s-major">×</b> 異常あり（修理・交換）</span><span>点検方法：目視・打音・振動・負荷・作動</span></div>
@@ -1577,6 +1617,7 @@ document.addEventListener('click', e => {
   else if (a === 'goto'){ S.tab = 'check'; S.period = b.dataset.period; openPlace(b.dataset.place); }
   else if (a === 'back'){ const from = S.placeId; S.placeId = null; S.annual = false; render(true); const el = document.querySelector(`.pcard[data-place="${CSS.escape(from || '')}"]`); if (el) el.scrollIntoView({block:'center'}); }
   else if (a === 'mark') markItem(b.dataset.item, b.dataset.mark);
+  else if (a === 'gotoitem'){ const el = document.getElementById('item-' + b.dataset.item); if (el){ el.scrollIntoView({block:'start', behavior:'smooth'}); el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1600); } }
   else if (a === 'gjump'){ const g = document.getElementById('grp-' + b.dataset.g); if (g) g.scrollIntoView({block:'start', behavior:'smooth'}); }
   else if (a === 'allok'){
     const place = placeById(S.placeId); const r = S.records[recKey(S.placeId, S.period)] || {}; const marks = r.marks || {};
