@@ -312,7 +312,24 @@ button.cell:hover{background:var(--accent-soft)}
 .lightbox img{max-width:100%;max-height:calc(100% - 70px);object-fit:contain;border-radius:8px;background:#222}
 .a4 .a4ph{display:flex;flex-wrap:wrap;gap:1.5mm;margin-top:1.2mm}
 .a4 .a4ph img{height:24mm;max-width:34mm;object-fit:cover;border:0.4pt solid #888}
-/* settings */
+.phbox{margin-top:6px;border:1.5px dashed var(--line-strong);border-radius:12px;padding:10px 12px;background:var(--surface);display:flex;flex-direction:column;gap:8px}
+.phbox.has{border-style:solid;border-color:var(--accent)}
+.phhead{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;font-size:14px}
+.phhead b{font-size:15px}
+.phhead .muted{font-size:13px}
+.phbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.phbig{display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;border-radius:10px;border:2px solid var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:15px;cursor:pointer;padding:6px 10px;text-align:center}
+.phbig:first-child{background:var(--accent);color:var(--accent-ink)}
+.phbig.off{opacity:.5;cursor:default}
+.phprev{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:2px solid var(--minor);background:var(--minor-soft);border-radius:10px;padding:8px 12px;color:var(--ink)}
+.phprev .tlist{margin:0;flex:0 0 auto;pointer-events:none}
+.phprev .thumb img{width:72px;height:54px}
+.phprev .thumb small{display:none}
+.phprev b{display:block;font-size:15px;color:var(--minor)}
+.phprev small{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.phbusy{font-size:14px;font-weight:700;color:var(--accent)}
+.phnote{font-size:13px;color:var(--muted)}
+@media (max-width:480px){ .phbtns{grid-template-columns:1fr} }/* settings */
 .subnav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
 .subnav button{border:1.5px solid var(--line-strong);background:var(--surface);border-radius:999px;padding:7px 14px;font-size:14.5px;font-weight:700;color:var(--muted)}
 .subnav button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
@@ -1047,23 +1064,31 @@ function prevPhotos(placeId, itemId, period){
 function thumbs(list, del){
   return list.map((ph, i) => `<span class="thumb"><img data-pid="${h(ph.s)}" data-full="${h(ph.id)}" alt="写真${i + 1}" data-act="zoom">${del ? `<button class="tdel" data-act="ph-del" data-place="${h(del.place)}" data-period="${del.period}" data-item="${h(del.item)}" data-i="${i}" aria-label="写真${i + 1}を外す">×</button>` : ''}${ph.at ? `<small>${h(fmtDate(ph.at))}</small>` : ''}</span>`).join('');
 }
-/* 点検画面で使う写真の欄（撮る／選ぶ・前回の写真を使う・外す） */
+/* 点検画面で使う写真の欄（カメラで撮る／写真を選ぶ／前回の写真を使う／外す） */
+const ICON_CAM = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M9 3 7.2 5H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.2L15 3H9zm3 5a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>';
+const ICON_PIC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm0 2v9.6l4-4 4 4 2.5-2.5L20 18V6H4zm11 1.5a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>';
 function photoEditor(placeId, period, itemId, r){
-  const dis = !S.loaded ? ' disabled' : '';
+  const dis = !S.loaded;
   const cur = photosOf(r, itemId);
   const pv = prevPhotos(placeId, itemId, period);
   const key = placeId + '|' + period + '|' + itemId;
   const busy = S.uploading === key;
   const same = pv && cur.length && cur.map(x => x.id).join() === pv.ps.map(x => x.id).join();
-  return `<div class="photos">
-    <div class="tlist">${thumbs(cur, {place:placeId, period, item:itemId})}</div>
-    <div class="chips">
-      ${cur.length < MAX_PHOTOS ? `<label class="chip phbtn${busy || dis ? ' off' : ''}">${busy ? '写真を保存中…' : (cur.length ? '写真を追加' : '写真を撮る・選ぶ')}<input type="file" accept="image/*" multiple hidden data-photo="${h(key)}"${busy || dis ? ' disabled' : ''}></label>` : ''}
-      ${pv && !same ? `<button class="chip prevc" data-act="ph-prev" data-place="${h(placeId)}" data-period="${period}" data-item="${h(itemId)}"${dis}>前回（${h(pv.per.label)}）の写真を使う（${pv.ps.length}枚）</button>` : ''}
-      ${same ? '<span class="lbl">前回と同じ写真です。様子が変わっていたら、×で外して撮り直してください。</span>' : ''}
-    </div></div>`;
-}
-/* 画面に出ている写真を読み込む（足りない分だけまとめて取りにいく） */
+  const room = MAX_PHOTOS - cur.length;
+  const off = busy || dis;
+  const pick = (label, icon, capture) => `<label class="phbig${off ? ' off' : ''}">${icon}<span>${label}</span>
+      <input type="file" accept="image/*"${capture ? ' capture="environment"' : ' multiple'} hidden data-photo="${h(key)}"${off ? ' disabled' : ''}></label>`;
+  return `<div class="phbox${cur.length ? ' has' : ''}">
+    <div class="phhead"><b>写真</b><span class="muted">${cur.length ? `${cur.length}枚 付いています（あと${room}枚付けられます）` : '状態が分かる写真を付けると、報告書にも載ります（3枚まで）'}</span></div>
+    ${cur.length ? `<div class="tlist">${thumbs(cur, {place:placeId, period, item:itemId})}</div>` : ''}
+    ${busy ? '<div class="phbusy">写真を保存しています。画面を閉じずにお待ちください…</div>' : ''}
+    ${same ? `<div class="phnote">前回（${h(pv.per.label)}）と同じ写真です。様子が変わっていたら、写真の右上の × で外してから撮り直してください。</div>` : ''}
+    ${pv && !same && !busy ? `<button class="phprev" data-act="ph-prev" data-place="${h(placeId)}" data-period="${period}" data-item="${h(itemId)}"${dis ? ' disabled' : ''}>
+        <span class="tlist">${thumbs(pv.ps.slice(0, 2))}</span>
+        <span><b>前回（${h(pv.per.label)}）の写真を使う</b><small>${pv.ps.length}枚。状態が変わっていなければ、これを押すだけで済みます${cur.length ? '（今付いている写真と入れ替わります）' : ''}</small></span></button>` : ''}
+    ${room > 0 && !busy ? `<div class="phbtns">${pick('カメラで撮る', ICON_CAM, true)}${pick('保存した写真から選ぶ', ICON_PIC, false)}</div>` : ''}
+  </div>`;
+}/* 画面に出ている写真を読み込む（足りない分だけまとめて取りにいく） */
 function loadPhotos(root){
   const imgs = [...(root || document).querySelectorAll('img[data-pid]')];
   const need = [];
