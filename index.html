@@ -299,7 +299,20 @@ button.cell:hover{background:var(--accent-soft)}
 .prevpanel .ptxt small{font-size:12.5px;color:var(--muted);font-weight:400}
 .prevpanel p{margin:8px 0 0;font-size:13px;color:var(--muted)}
 .pill.prevp{background:var(--minor-soft);color:var(--minor);border-color:var(--minor);margin-left:8px;padding:0 8px;font-size:12px}
-.item.flash{outline:3px solid var(--accent);outline-offset:-3px}/* settings */
+.item.flash{outline:3px solid var(--accent);outline-offset:-3px}.photos{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.tlist{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.tlist:empty{display:none}
+.thumb{position:relative;display:inline-flex;flex-direction:column;align-items:center;gap:2px}
+.thumb img{width:96px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line-strong);background:var(--surface-2);cursor:zoom-in;display:block}
+.thumb small{font-size:11px;color:var(--muted)}
+.tdel{position:absolute;top:-8px;right:-8px;width:28px;height:28px;border-radius:50%;border:2px solid var(--surface);background:var(--major);color:var(--on-sem);font-weight:700;font-size:15px;line-height:1;padding:0}
+.chip.phbtn{cursor:pointer;border-color:var(--accent);color:var(--accent);font-weight:700}
+.chip.phbtn.off{opacity:.6;cursor:default}
+.lightbox{position:fixed;inset:0;z-index:60;background:rgba(10,14,22,.86);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.lightbox img{max-width:100%;max-height:calc(100% - 70px);object-fit:contain;border-radius:8px;background:#222}
+.a4 .a4ph{display:flex;flex-wrap:wrap;gap:1.5mm;margin-top:1.2mm}
+.a4 .a4ph img{height:24mm;max-width:34mm;object-fit:cover;border:0.4pt solid #888}
+/* settings */
 .subnav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
 .subnav button{border:1.5px solid var(--line-strong);background:var(--surface);border-radius:999px;padding:7px 14px;font-size:14.5px;font-weight:700;color:var(--muted)}
 .subnav button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
@@ -665,6 +678,7 @@ function expandSeed(seed){
 /* ---- storage adapters ---- */
 function makeLocalStore(){
   const KEY = 'anzen-tenken-local-v2';
+  const memPh = {};
   let cb, mem = null;
   const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e){ return {}; } };
   const save = (d) => { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch(e){} };
@@ -682,6 +696,8 @@ function makeLocalStore(){
     async patchRecord(key, patch){ const d = get(); d.records = d.records || {}; d.records[key] = deepMerge(d.records[key] || {}, patch); save(d); cb.one(key, d.records[key]); },
     async saveConfig(cfg){ const d = get(); d.config = cfg; save(d); cb.config(cfg); },
     async getSeed(){ return window.ANZEN_SEED || null; },
+    async uploadPhoto(ph){ const id = uid('p'); memPh[id] = 'data:image/jpeg;base64,' + ph.full; memPh[id + 's'] = 'data:image/jpeg;base64,' + ph.small; try { localStorage.setItem('anzen-ph-' + id, memPh[id]); localStorage.setItem('anzen-ph-' + id + 's', memPh[id + 's']); } catch(e){} return {id, s:id + 's'}; },
+    async getPhotos(ids){ const o = {}; ids.forEach(i => { let v = memPh[i]; try { v = v || localStorage.getItem('anzen-ph-' + i); } catch(e){} if (v) o[i] = v; }); return o; },
     async setTeamOrder(tid, places){ const d = get(); const cfg = d.config && d.config.teams ? d.config : clone(S.config); const tm = cfg.teams.find(x => x.id === tid); if (!tm) throw new Error('班が見つかりません'); tm.places = places; d.config = cfg; save(d); cb.config(cfg); },
     async importRecords(data){
       const d = get(); d.records = d.records || {}; let added = 0, skipped = 0;
@@ -747,7 +763,9 @@ function makeGasStore(){
     async saveConfig(cfg){ await gasCall('saveConfig', JSON.stringify(cfg)); lastWrite = Date.now(); cb.config(cfg); },
     async getSeed(){ return JSON.parse(await gasCall('getSeed')); },
     async setTeamOrder(tid, places){ const cfg = JSON.parse(await gasCall('setTeamOrder', tid, JSON.stringify(places), JSON.stringify(S.config))); lastWrite = Date.now(); cb.config(cfg); },
-    async importRecords(data){ const r = JSON.parse(await gasCall('importRecords', JSON.stringify(data))); lastWrite = 0; await pull(true); return r; }
+    async importRecords(data){ const r = JSON.parse(await gasCall('importRecords', JSON.stringify(data))); lastWrite = 0; await pull(true); return r; },
+    async uploadPhoto(ph){ return JSON.parse(await gasCall('uploadPhoto', JSON.stringify(ph))); },
+    async getPhotos(ids){ return JSON.parse(await gasCall('getPhotos', JSON.stringify(ids))); }
   };
 }
 
@@ -864,6 +882,7 @@ window.addEventListener('resize', fitA4);function render(force){
   else if (S.tab === 'help') v.innerHTML = viewHelp();
   else { v.innerHTML = viewSettings(); updateSaveBar(); }
   fitA4();
+  loadPhotos();
   const stp = document.querySelector('.stepper');
   document.documentElement.style.setProperty('--step-h', (stp ? stp.offsetHeight : 0) + 'px');
   const st = $('.stepper'), cur = st && st.querySelector('.on');
@@ -1011,6 +1030,104 @@ function prevPanel(place, prev){
     <ul>${list.map(x => `<li><button data-act="gotoitem" data-item="${h(x.it.id)}"><span class="psym ${x.mark}">${MARK[x.mark].sym}</span><span class="pno num">No.${h(x.it.no)}</span><span class="ptxt"><b>${h(x.note || x.it.text)}</b>${x.note ? `<small>${h(x.it.text)}</small>` : ''}</span>${x.done ? '<span class="pdone">対応済</span>' : ''}</button></li>`).join('')}</ul>
     <p>今回も同じ状態なら、その項目で同じ判定を付け、「前回と同じ内容」を押してください。</p></section>`;
 }
+/* ---- 写真（本体は Google ドライブ、記録には番号だけ） ---- */
+const PHOTO = new Map();          /* 番号 → 画像（この画面を開いている間だけ覚える） */
+const PH_LOADING = new Set();
+const MAX_PHOTOS = 3;
+const photosOf = (r, id) => (r && r.photos && Array.isArray(r.photos[id])) ? r.photos[id] : [];
+/* 前の月までで、この項目に一番新しく付いている写真 */
+function prevPhotos(placeId, itemId, period){
+  const idx = PERIODS.findIndex(p => p.id === period);
+  for (let i = idx - 1; i >= 0; i--){
+    const ps = photosOf(S.records[recKey(placeId, PERIODS[i].id)], itemId);
+    if (ps.length) return {ps, per:PERIODS[i]};
+  }
+  return null;
+}
+function thumbs(list, del){
+  return list.map((ph, i) => `<span class="thumb"><img data-pid="${h(ph.s)}" data-full="${h(ph.id)}" alt="写真${i + 1}" data-act="zoom">${del ? `<button class="tdel" data-act="ph-del" data-place="${h(del.place)}" data-period="${del.period}" data-item="${h(del.item)}" data-i="${i}" aria-label="写真${i + 1}を外す">×</button>` : ''}${ph.at ? `<small>${h(fmtDate(ph.at))}</small>` : ''}</span>`).join('');
+}
+/* 点検画面で使う写真の欄（撮る／選ぶ・前回の写真を使う・外す） */
+function photoEditor(placeId, period, itemId, r){
+  const dis = !S.loaded ? ' disabled' : '';
+  const cur = photosOf(r, itemId);
+  const pv = prevPhotos(placeId, itemId, period);
+  const key = placeId + '|' + period + '|' + itemId;
+  const busy = S.uploading === key;
+  const same = pv && cur.length && cur.map(x => x.id).join() === pv.ps.map(x => x.id).join();
+  return `<div class="photos">
+    <div class="tlist">${thumbs(cur, {place:placeId, period, item:itemId})}</div>
+    <div class="chips">
+      ${cur.length < MAX_PHOTOS ? `<label class="chip phbtn${busy || dis ? ' off' : ''}">${busy ? '写真を保存中…' : (cur.length ? '写真を追加' : '写真を撮る・選ぶ')}<input type="file" accept="image/*" multiple hidden data-photo="${h(key)}"${busy || dis ? ' disabled' : ''}></label>` : ''}
+      ${pv && !same ? `<button class="chip prevc" data-act="ph-prev" data-place="${h(placeId)}" data-period="${period}" data-item="${h(itemId)}"${dis}>前回（${h(pv.per.label)}）の写真を使う（${pv.ps.length}枚）</button>` : ''}
+      ${same ? '<span class="lbl">前回と同じ写真です。様子が変わっていたら、×で外して撮り直してください。</span>' : ''}
+    </div></div>`;
+}
+/* 画面に出ている写真を読み込む（足りない分だけまとめて取りにいく） */
+function loadPhotos(root){
+  const imgs = [...(root || document).querySelectorAll('img[data-pid]')];
+  const need = [];
+  imgs.forEach(img => { const id = img.dataset.pid; if (PHOTO.has(id)) img.src = PHOTO.get(id); else if (!PH_LOADING.has(id) && !need.includes(id)) need.push(id); });
+  if (!need.length || !store || !store.getPhotos) return Promise.resolve();
+  need.forEach(id => PH_LOADING.add(id));
+  const chunks = []; for (let i = 0; i < need.length; i += 8) chunks.push(need.slice(i, i + 8));
+  return Promise.all(chunks.map(c => store.getPhotos(c).then(map => {
+    for (const id in map) PHOTO.set(id, map[id]);
+  }).catch(() => {}).then(() => c.forEach(id => PH_LOADING.delete(id)))))
+    .then(() => document.querySelectorAll('img[data-pid]').forEach(img => { const v = PHOTO.get(img.dataset.pid); if (v && img.src !== v) img.src = v; }));
+}
+/* 撮った写真を小さくする（長い辺 maxpx の JPEG） */
+function shrink(file, maxpx, q){
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, maxpx / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      res(c.toDataURL('image/jpeg', q));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('画像を読めません')); };
+    img.src = url;
+  });
+}
+async function addPhotos(key, files){
+  const [placeId, period, itemId] = key.split('|');
+  const r = S.records[recKey(placeId, period)] || {};
+  const cur = photosOf(r, itemId).slice();
+  const place = placeById(placeId);
+  const room = MAX_PHOTOS - cur.length;
+  const list = [...files].slice(0, room);
+  if (files.length > room) showToast('写真は1項目につき' + MAX_PHOTOS + '枚までです。');
+  S.uploading = key; render(true);
+  try {
+    for (const f of list){
+      const full = await shrink(f, 1600, 0.82), small = await shrink(f, 640, 0.78);
+      const it = place && place.items.find(x => x.id === itemId);
+      const name = `${place ? place.name : placeId}_${PERIOD_BY_ID[period].label}_${itemId === '_memo' ? '気付いたこと' : 'No.' + (it ? it.no : itemId)}`;
+      const saved = await store.uploadPhoto({full:full.split(',')[1], small:small.split(',')[1], name});
+      PHOTO.set(saved.s, small); PHOTO.set(saved.id, full);
+      cur.push({id:saved.id, s:saved.s, at:todayISO()});
+      patchRecord(placeId, period, {photos:{[itemId]: cur.slice()}});
+    }
+    if (list.length) showToast('写真を保存しました');
+  } catch(e){ showToast('写真を保存できませんでした。通信状態を確認して、もう一度お試しください。'); }
+  S.uploading = null; render(true);
+}
+function zoomPhoto(img){
+  const box = document.createElement('div');
+  box.className = 'lightbox'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', '写真の拡大');
+  box.innerHTML = '<img alt="写真"><button class="btn">閉じる</button>';
+  const big = box.querySelector('img');
+  const fid = img.dataset.full;
+  big.src = PHOTO.get(fid) || img.src;
+  if (!PHOTO.has(fid) && store.getPhotos) store.getPhotos([fid]).then(m => { if (m[fid]){ PHOTO.set(fid, m[fid]); big.src = m[fid]; } }).catch(() => {});
+  box.addEventListener('click', () => box.remove());
+  document.body.appendChild(box);
+}
+
 function viewPlace(){
   const place = placeById(S.placeId);
   if (!place){ S.placeId = null; return viewList(); }
@@ -1051,7 +1168,7 @@ function viewPlace(){
     const pdone = pbad && (prev.r.status || {})[it.id] === 'done';
     const prevLine = pbad
       ? `<div class="prevbox ${pmk}"><div class="ph"><span class="psym">${MARK[pmk].sym}</span>前回（${h(prev.period.label)}）は「${MARK[pmk].label}」${pdone ? '<span class="pdone">対応済</span>' : ''}</div>
-         <div class="pnote">${h(pn[it.id] || '（内容の記入なし）')}</div>${lc ? `<div class="pcmt">所見・指示（${h(lc.per.label)}）：${h(cmtText(lc.c))}</div>` : ''}</div>`
+         <div class="pnote">${h(pn[it.id] || '（内容の記入なし）')}</div>${photosOf(prev.r, it.id).length ? `<div class="tlist">${thumbs(photosOf(prev.r, it.id))}</div>` : ''}${lc ? `<div class="pcmt">所見・指示（${h(lc.per.label)}）：${h(cmtText(lc.c))}</div>` : ''}</div>`
       : (lc ? `<div class="prev">所見・指示（${h(lc.per.label)}）：<b>${h(cmtText(lc.c))}</b></div>` : '');
     const btns = ['ok','minor','major'].map(k =>
       `<button class="mk ${k}${m === k ? ' on' : ''}" data-act="mark" data-item="${h(it.id)}" data-mark="${k}" aria-pressed="${m === k}" aria-label="No.${h(it.no)} ${MARK[k].label}"${dis}>${MARK[k].sym}</button>`).join('');
@@ -1067,7 +1184,8 @@ function viewPlace(){
             <button data-act="status" data-item="${h(it.id)}" data-val="open" aria-pressed="${st === 'open'}"${dis}>未対応</button>
             <button data-act="status" data-item="${h(it.id)}" data-val="done" aria-pressed="${st === 'done'}"${dis}>対応済</button>
           </div>
-        </div></div>`;
+        </div>
+        ${photoEditor(place.id, S.period, it.id, r)}</div>`;
     }
     return `${g}<div class="item s-${m || 'none'}" id="item-${h(it.id)}">
       <div class="ino num">${h(it.no)}</div>
@@ -1103,6 +1221,7 @@ function viewPlace(){
     <div class="muted" style="font-size:13.5px;margin-bottom:8px">点検項目にない不具合や、気付いたことがあれば記入します。△・× を付けた項目の内容は、各項目の欄に入力してください。</div>
     ${prev && prev.r.memo && prev.r.memo !== r.memo ? `<div class="chips" style="margin:0 0 8px"><span class="lbl">前回</span><button class="chip prevc" data-act="copymemo">前回（${h(prev.period.label)}）の内容を引き継ぐ</button></div>` : ''}
     <textarea class="input" id="f-memo" data-field="memo" placeholder="なければ空欄のままで大丈夫です"${dis}>${h(r.memo || '')}</textarea>
+    ${photoEditor(place.id, S.period, '_memo', r)}
   </section>
 
   <div class="foot-nav noprint">
@@ -1173,6 +1292,7 @@ function issueCard(x){
       <div class="what">No.${h(x.it.no)}　${h(x.it.text)}</div>
       <div class="note">${x.note ? h(x.note) : '<span class="muted">（内容未記入）</span>'}</div>
       <div class="who">${h(whoLine(x.r))}</div>
+      ${photosOf(x.r, x.it.id).length ? `<div class="tlist">${thumbs(photosOf(x.r, x.it.id))}</div>` : ''}
       ${cmtEditor(x.place.id, x.period, x.it.id, cmtOf(x.r, x.it.id), x.cur ? x.prevCmt : null)}
     </div>
     <div class="seg" role="group" aria-label="対応状況">
@@ -1299,7 +1419,7 @@ function viewReport(){
   <p class="muted" style="font-size:13.5px;margin:-4px 0 10px">報告書（A4）と同じ番号・同じ順です。回議の後、管理職等が紙に書いた所見・指示を、番号を見ながらここに書き写します。</p>
   ${d.list.length ? `<div class="issues">${d.list.map(x => issueCard(x)).join('')}</div>` : '<div class="empty">ありません</div>'}
   <h3 class="sub">点検項目以外で気付いたこと</h3>
-  ${d.memos.length ? `<div class="issues">${d.memos.map((x, i) => `<div class="issue" style="grid-template-columns:auto 1fr"><div class="seq num">${String.fromCharCode(65 + i)}</div><div><div class="where"><button data-act="goto" data-place="${h(x.p.id)}" data-period="${S.period}">${h(x.p.name)}</button></div><div class="note" style="white-space:pre-line">${h(x.s.r.memo.trim())}</div><div class="who">${h(whoLine(x.s.r))}</div>${cmtEditor(x.p.id, S.period, '_memo', cmtOf(x.s.r, '_memo'), null)}</div></div>`).join('')}</div>` : '<div class="empty">ありません</div>'}  <h3 class="sub">全体への所見・指示</h3>
+  ${d.memos.length ? `<div class="issues">${d.memos.map((x, i) => `<div class="issue" style="grid-template-columns:auto 1fr"><div class="seq num">${String.fromCharCode(65 + i)}</div><div><div class="where"><button data-act="goto" data-place="${h(x.p.id)}" data-period="${S.period}">${h(x.p.name)}</button></div><div class="note" style="white-space:pre-line">${h(x.s.r.memo.trim())}</div><div class="who">${h(whoLine(x.s.r))}</div>${photosOf(x.s.r, '_memo').length ? `<div class="tlist">${thumbs(photosOf(x.s.r, '_memo'))}</div>` : ''}${cmtEditor(x.p.id, S.period, '_memo', cmtOf(x.s.r, '_memo'), null)}</div></div>`).join('')}</div>` : '<div class="empty">ありません</div>'}  <h3 class="sub">全体への所見・指示</h3>
   <div class="memo" style="margin-top:0">
     <div class="muted" style="font-size:13.5px;margin-bottom:8px">不具合1件ごとではない、全体への所見・指示があれば入力します。報告書（A4）の最後の欄に印刷されます。</div>
     <textarea class="input" id="f-shoken" data-field="shoken" rows="4" placeholder="例：3階東廊下の床の浮きは、業者に修理を依頼すること。（10/3 校長）"${S.loaded ? '' : ' disabled'}>${h(getShoken(S.period))}</textarea>
@@ -1307,6 +1427,7 @@ function viewReport(){
   <div class="legend" style="margin-top:0"><span><b class="s-ok">✓</b> 異常なし</span><span><b class="s-minor">△</b> 軽度あり</span><span><b class="s-major">×</b> 修理・交換あり</span><span><b>5/20</b> 点検途中（入力済み／項目数）</span><span><b>・</b> 未点検</span></div>
   <div class="tablewrap"><table class="grid"><thead><tr><th class="lft" style="text-align:left">場所</th>${gridHead}</tr></thead><tbody>${gridBody}</tbody></table></div>`;
 }
+const a4photos = (list) => list.length ? `<div class="a4ph">${list.map(ph => `<img data-pid="${h(ph.s)}" data-full="${h(ph.id)}" alt="写真">`).join('')}</div>` : '';
 /* A4 報告書（横）：不具合1件ごとに所見・指示の記入欄 */
 function reportA4(d){
   const today = new Date();
@@ -1324,11 +1445,11 @@ function reportA4(d){
       <td class="c">${x.isNew ? '<b>新規</b>' : '継続'}</td>
       <td class="c sym">${MARK[x.mark].sym}</td>
       <td><b>${h(x.place.name)}</b><div class="sm">No.${h(x.it.no)} ${h(x.it.text)}</div></td>
-      <td>${x.note ? h(x.note) : '（内容未記入）'}${x.done ? '<div class="sm"><b>［対応済］</b></div>' : ''}<div class="sm">${h(teamLabel(x.r))} ${h(fmtDate(x.r.date))}${!x.cur ? '（' + h(PERIOD_BY_ID[x.period].label) + 'の点検）' : ''}</div></td>
+      <td>${x.note ? h(x.note) : '（内容未記入）'}${x.done ? '<div class="sm"><b>［対応済］</b></div>' : ''}<div class="sm">${h(teamLabel(x.r))} ${h(fmtDate(x.r.date))}${!x.cur ? '（' + h(PERIOD_BY_ID[x.period].label) + 'の点検）' : ''}</div>${a4photos(photosOf(x.r, x.it.id))}</td>
       <td class="sm">${prevCell(x)}</td>
       <td class="write">${x.cur && cmtOf(x.r, x.it.id) ? h(cmtText(cmtOf(x.r, x.it.id))) : ''}</td></tr>`).join('');
   const memoRows = d.memos.map((x, i) => `<tr><td class="c">${String.fromCharCode(65 + i)}</td><td><b>${h(x.p.name)}</b></td>
-      <td style="white-space:pre-line">${h(x.s.r.memo.trim())}<div class="sm">${h(teamLabel(x.s.r))} ${h(fmtDate(x.s.r.date))}</div></td>
+      <td style="white-space:pre-line">${h(x.s.r.memo.trim())}<div class="sm">${h(teamLabel(x.s.r))} ${h(fmtDate(x.s.r.date))}</div>${a4photos(photosOf(x.s.r, '_memo'))}</td>
       <td class="write">${cmtOf(x.s.r, '_memo') ? h(cmtText(cmtOf(x.s.r, '_memo'))) : ''}</td></tr>`).join('');
   const shoken = getShoken(S.period).trim();
   return `<article class="a4 land">
@@ -1371,7 +1492,8 @@ function viewHelp(){
       <li>出てきた「破損あり」「修理依頼済」などのボタンを押すと、内容が入ります。足りないところは文字で書き足します。</li>
       <li>前の月にも異常があった項目には前回の内容が表示され、「前回と同じ内容」を押すだけで引き継げます。</li>
       <li>修理などが済んだら「<b>対応済</b>」に切り替えます。</li>
-      <li>点検項目にない不具合や気付いたことは、一番下の「上記の点検項目以外で気付いたこと」に書きます。</li></ol>`],
+      <li>点検項目にない不具合や気付いたことは、一番下の「上記の点検項目以外で気付いたこと」に書きます。</li>
+      <li><b>写真</b>：△・× を付けると「写真を撮る・選ぶ」が出ます。1項目に3枚まで付けられ、報告書にも印刷されます。前の月に写真がある項目は「前回の写真を使う」で同じ写真を付けられます。様子が変わっていたら × で外して撮り直します。写真を押すと大きく見られます。</li></ol>`],
     ['marks','画面の見方', `<ul>
       <li>月のボタンが<b>黄色</b>の月は、点検が途中です（「完了した場所の数/全体」が出ます）。</li>
       <li>「点検途中」と出ている場所は、まだ入力していない項目があります。</li>
@@ -1622,6 +1744,9 @@ document.addEventListener('click', e => {
   else if (a === 'goto'){ S.tab = 'check'; S.period = b.dataset.period; openPlace(b.dataset.place); }
   else if (a === 'back'){ const from = S.placeId; S.placeId = null; S.annual = false; render(true); const el = document.querySelector(`.pcard[data-place="${CSS.escape(from || '')}"]`); if (el) el.scrollIntoView({block:'center'}); }
   else if (a === 'mark') markItem(b.dataset.item, b.dataset.mark);
+  else if (a === 'zoom') zoomPhoto(b);
+  else if (a === 'ph-del'){ const r = S.records[recKey(b.dataset.place, b.dataset.period)] || {}; const cur = photosOf(r, b.dataset.item).slice(); cur.splice(+b.dataset.i, 1); patchRecord(b.dataset.place, b.dataset.period, {photos:{[b.dataset.item]: cur}}); render(true); }
+  else if (a === 'ph-prev'){ const pv = prevPhotos(b.dataset.place, b.dataset.item, b.dataset.period); if (pv){ patchRecord(b.dataset.place, b.dataset.period, {photos:{[b.dataset.item]: pv.ps.map(x => ({id:x.id, s:x.s, at:x.at, from:pv.per.id}))}}); render(true); showToast('前回の写真を使いました'); } }
   else if (a === 'gotoitem'){ const el = document.getElementById('item-' + b.dataset.item); if (el){ el.scrollIntoView({block:'start', behavior:'smooth'}); el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1600); } }
   else if (a === 'gjump'){ const g = document.getElementById('grp-' + b.dataset.g); if (g) g.scrollIntoView({block:'start', behavior:'smooth'}); }
   else if (a === 'allok'){
@@ -1661,7 +1786,8 @@ document.addEventListener('click', e => {
       .then(() => { S.reorderBusy = false; render(true); });
   }  else if (a === 'hjump'){ const el = document.getElementById('help-' + b.dataset.id); if (el) el.scrollIntoView({block:'start', behavior:'smooth'}); }
   else if (a === 'rview'){ S.reportView = b.dataset.v; render(true); }
-  else if (a === 'print'){ try { window.print(); } catch(err){ showToast('印刷を開けませんでした。ブラウザのメニューから印刷してください。'); } }
+  else if (a === 'print'){ b.disabled = true; showToast('写真を読み込んでから印刷します…'); loadPhotos().then(() => new Promise(r => setTimeout(r, 400))).then(() => { b.disabled = false; try { window.print(); } catch(err){ showToast('印刷を開けませんでした。ブラウザのメニューから印刷してください。'); } }); }
+  else if (a === 'print-old'){ try { window.print(); } catch(err){ showToast('印刷を開けませんでした。ブラウザのメニューから印刷してください。'); } }
   /* 設定 */
   else if (a === 'settab'){ S.setTab = b.dataset.k; ls.set('anzen-settab', S.setTab); render(true); }
   else if (a === 'team-open'){ S.openTeam = S.openTeam === b.dataset.team ? null : b.dataset.team; render(true); }
@@ -1740,6 +1866,7 @@ document.addEventListener('click', e => {
 
 document.addEventListener('change', e => {
   const el = e.target;
+  if (el.dataset && el.dataset.photo){ if (el.files && el.files.length) addPhotos(el.dataset.photo, el.files); el.value = ''; return; }
   if (!el.dataset) return;
   if (el.dataset.addto){
     if (!el.value) return;
