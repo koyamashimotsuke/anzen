@@ -1410,9 +1410,9 @@ function viewReport(){
         <button data-act="rview" data-v="screen" aria-pressed="${S.reportView === 'screen'}">画面で確認</button>
         <button data-act="rview" data-v="a4" aria-pressed="${S.reportView === 'a4'}">報告書（A4）</button>
       </div>
-      ${S.reportView === 'a4' ? '<button class="btn primary" data-act="print">印刷する</button>' : ''}
+      ${S.reportView === 'a4' ? '<button class="btn primary" data-act="print">印刷する</button><button class="btn" data-act="pdf">PDFで保存</button>' : ''}
     </div></div>`;
-  if (S.reportView === 'a4') return `${topBanner()}${toggle}<p class="muted noprint" style="font-size:13.5px;margin-top:-4px">印刷の画面で用紙を「A4・横」にしてください。</p><div class="a4wrap">${reportA4(d)}</div>`;
+  if (S.reportView === 'a4') return `${topBanner()}${toggle}${S.pdfHint ? `<div class="banner part noprint" style="font-weight:400"><b>PDFで保存するには</b>：開いた印刷の画面で、<b>「プリンター」（送信先）を「PDFとして保存」</b>（Edge・Chrome）にして「保存」を押します。iPad では、印刷の画面で右上の共有ボタンから「"ファイル"に保存」を選びます。用紙は「A4・横」です。</div>` : '<p class="muted noprint" style="font-size:13.5px;margin-top:-4px">印刷の画面で用紙を「A4・横」にしてください。</p>'}<div class="a4wrap">${reportA4(d)}</div>`;
 
   const gridHead = PERIODS.map(p => `<th class="num">${h(p.label)}</th>`).join('');
   const gridBody = S.places.map(p => `<tr><td class="lft" style="white-space:normal;min-width:11em;text-align:left">${h(p.n)}．${h(p.name)}</td>${
@@ -1453,6 +1453,21 @@ function viewReport(){
   <div class="tablewrap"><table class="grid"><thead><tr><th class="lft" style="text-align:left">場所</th>${gridHead}</tr></thead><tbody>${gridBody}</tbody></table></div>`;
 }
 const a4photos = (list) => list.length ? `<div class="a4ph">${list.map(ph => `<img data-pid="${h(ph.s)}" data-full="${h(ph.id)}" alt="写真">`).join('')}</div>` : '';
+/* 印刷・PDF保存：写真を読み込んでから開く。保存されるファイル名は「安全点検報告書_令和8年度_9月」の形 */
+function doPrint(){
+  const btns = document.querySelectorAll('[data-act="print"],[data-act="pdf"]');
+  btns.forEach(x => x.disabled = true);
+  showToast(S.pdfHint ? '写真を読み込んでから、保存の画面を開きます…' : '写真を読み込んでから印刷します…');
+  const old = document.title;
+  loadPhotos().then(() => new Promise(r => setTimeout(r, 400))).then(() => {
+    btns.forEach(x => x.disabled = false);
+    document.title = `安全点検報告書_令和${S.year}年度_${PERIOD_BY_ID[S.period].label}`;
+    const back = () => { document.title = old; window.removeEventListener('afterprint', back); };
+    window.addEventListener('afterprint', back);
+    try { window.print(); } catch(err){ back(); showToast('印刷の画面を開けませんでした。ブラウザのメニューから印刷してください。'); }
+    setTimeout(back, 60000);
+  });
+}
 /* A4 報告書（横）：不具合1件ごとに所見・指示の記入欄 */
 function reportA4(d){
   const today = new Date();
@@ -1810,8 +1825,8 @@ document.addEventListener('click', e => {
       () => showToast('保存できませんでした。通信状態を確認して、もう一度お試しください。'))
       .then(() => { S.reorderBusy = false; render(true); });
   }  else if (a === 'hjump'){ const el = document.getElementById('help-' + b.dataset.id); if (el) el.scrollIntoView({block:'start', behavior:'smooth'}); }
-  else if (a === 'rview'){ S.reportView = b.dataset.v; render(true); }
-  else if (a === 'print'){ b.disabled = true; showToast('写真を読み込んでから印刷します…'); loadPhotos().then(() => new Promise(r => setTimeout(r, 400))).then(() => { b.disabled = false; try { window.print(); } catch(err){ showToast('印刷を開けませんでした。ブラウザのメニューから印刷してください。'); } }); }
+  else if (a === 'rview'){ S.pdfHint = false; S.reportView = b.dataset.v; render(true); }
+  else if (a === 'print' || a === 'pdf'){ S.pdfHint = a === 'pdf'; render(true); doPrint(); }
   else if (a === 'print-old'){ try { window.print(); } catch(err){ showToast('印刷を開けませんでした。ブラウザのメニューから印刷してください。'); } }
   /* 設定 */
   else if (a === 'settab'){ S.setTab = b.dataset.k; ls.set('anzen-settab', S.setTab); render(true); }
